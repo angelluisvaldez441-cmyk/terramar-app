@@ -1,0 +1,1626 @@
+/* ============================================
+   TRANSPORTE TERRAMAR - ESTILOS GLOBALES
+   Paleta Verde Ecoturística
+   ============================================ */
+
+:root {
+  /* Paleta de colores */
+  --verde-primario: #1A5C38;
+  --verde-secundario: #2E8B57;
+  --verde-acento: #52C47A;
+  --verde-claro: #E8F5E9;
+  --blanco-natural: #F5FBF7;
+  --gris-texto: #4A4A4A;
+  --gris-claro: #8B8B8B;
+  --dorado: #C9A84C;
+  --dorado-claro: #E5C56B;
+  --blanco: #FFFFFF;
+  --negro: #1A1A1A;
+  --sombra-suave: rgba(26, 92, 56, 0.15);
+  --sombra-media: rgba(26, 92, 56, 0.25);
+
+  /* Tipografía */
+  --fuente-titulos: 'Fraunces', serif;
+  --fuente-cuerpo: 'DM Sans', sans-serif;
+
+  /* Transiciones */
+  --transicion-suave: all 0.3s ease;
+  --transicion-media: all 0.5s ease;
+
+  /* Bordes redondeados */
+  --radio-pequeno: 8px;
+  --radio-medio: 12px;
+  --radio-grande: 20px;
+  --radio-circular: 50%;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--fuente-cuerpo);
+  background-color: var(--blanco-natural);
+  color: var(--gris-texto);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--fuente-titulos);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--verde-primario);
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: var(--transicion-suave);
+}
+
+button {
+  font-family: var(--fuente-cuerpo);
+  cursor: pointer;
+  border: none;
+  outline: none;
+  transition: var(--transicion-suave);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ============================================
+   ANIMACIONES
+   ============================================ */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 20px rgba(82, 196, 122, 0.4);
+  }
+
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 6px 30px rgba(82, 196, 122, 0.6);
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes checkBounce {
+  0% {
+    transform: scale(0);
+  }
+
+  50% {
+    transform: scale(1.2);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.6s ease forwards;
+}
+
+.slide-up {
+  animation: slideUp 0.6s ease forwards;
+}
+
+.slide-down {
+  animation: slideDown 0.6s ease forwards;
+}
+
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Animaciones al hacer scroll */
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.animate-on-scroll.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============================================
+   UTILIDADES
+   ============================================ */
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.section {
+  padding: 80px 0;
+}
+
+.section-title {
+  font-size: clamp(2rem, 5vw, 3rem);
+  text-align: center;
+  margin-bottom: 16px;
+  color: var(--verde-primario);
+}
+
+.section-subtitle {
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  text-align: center;
+  color: var(--gris-texto);
+  max-width: 600px;
+  margin: 0 auto 48px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 32px;
+  border-radius: var(--radio-grande);
+  font-size: 1rem;
+  font-weight: 600;
+  transition: var(--transicion-suave);
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--verde-acento), var(--verde-secundario));
+  color: var(--blanco);
+  box-shadow: 0 4px 15px var(--sombra-suave);
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px var(--sombra-media);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--verde-acento);
+  border: 2px solid var(--verde-acento);
+}
+
+.btn-secondary:hover {
+  background: var(--verde-acento);
+  color: var(--blanco);
+}
+
+.btn-whatsapp {
+  background: #25D366;
+  color: var(--blanco);
+  box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+}
+
+.btn-whatsapp:hover {
+  background: #1EBE5B;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 25px rgba(37, 211, 102, 0.6);
+}
+
+.btn-gold {
+  background: linear-gradient(135deg, var(--dorado), var(--dorado-claro));
+  color: var(--negro);
+}
+
+.btn-gold:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(201, 168, 76, 0.4);
+}
+
+/* ============================================
+   NAVBAR
+   ============================================ */
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: linear-gradient(135deg, var(--verde-primario), var(--verde-secundario));
+  padding: 16px 0;
+  box-shadow: 0 2px 20px var(--sombra-media);
+}
+
+.navbar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--blanco);
+  font-family: var(--fuente-titulos);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.navbar-logo-icon {
+  font-size: 2rem;
+}
+
+.navbar-menu {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.navbar-link {
+  color: var(--blanco);
+  font-weight: 500;
+  position: relative;
+  padding: 8px 0;
+}
+
+.navbar-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--verde-acento);
+  transition: width 0.3s ease;
+}
+
+.navbar-link:hover::after {
+  width: 100%;
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.navbar-admin {
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radio-circular);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transicion-suave);
+  font-size: 1.2rem;
+}
+
+.navbar-admin:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--blanco);
+}
+
+.navbar-cta {
+  padding: 12px 24px;
+  font-size: 0.9rem;
+}
+
+.navbar-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: transparent;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.navbar-toggle span {
+  width: 25px;
+  height: 3px;
+  background: var(--blanco);
+  border-radius: 2px;
+  transition: var(--transicion-suave);
+}
+
+/* ============================================
+   HERO SECTION
+   ============================================ */
+
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 120px 20px 80px;
+  background: linear-gradient(135deg, var(--verde-primario) 0%, var(--verde-secundario) 50%, var(--verde-acento) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.5;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+}
+
+.hero-badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  padding: 8px 20px;
+  border-radius: var(--radio-grande);
+  color: var(--blanco);
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.hero-title {
+  font-size: clamp(2.5rem, 7vw, 4.5rem);
+  color: var(--blanco);
+  margin-bottom: 20px;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.hero-description {
+  font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 40px;
+  line-height: 1.8;
+}
+
+.hero-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.hero-buttons .btn {
+  min-width: 250px;
+}
+
+.hero-scroll {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--blanco);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.8;
+  animation: float 2s ease-in-out infinite;
+}
+
+/* ============================================
+   CARDS (Vehículos y Animales)
+   ============================================ */
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 32px;
+}
+
+.card {
+  background: var(--blanco);
+  border-radius: var(--radio-medio);
+  overflow: hidden;
+  box-shadow: 0 4px 20px var(--sombra-suave);
+  transition: var(--transicion-media);
+}
+
+.card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 12px 40px var(--sombra-media);
+}
+
+.card-image {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  background: linear-gradient(135deg, var(--verde-claro), var(--verde-secundario));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  position: relative;
+}
+
+.card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: var(--dorado);
+  color: var(--negro);
+  padding: 6px 14px;
+  border-radius: var(--radio-pequeno);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.card-content {
+  padding: 24px;
+}
+
+.card-title {
+  font-size: 1.5rem;
+  margin-bottom: 12px;
+  color: var(--verde-primario);
+}
+
+.card-description {
+  color: var(--gris-texto);
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+
+.card-price {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--dorado);
+  margin-bottom: 20px;
+}
+
+.card-price span {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--gris-texto);
+}
+
+.card-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.card-actions .btn {
+  flex: 1;
+  padding: 12px 20px;
+  font-size: 0.95rem;
+}
+
+/* ============================================
+   SECCIÓN ANIMALES (destacada)
+   ============================================ */
+
+.animales-section {
+  background: linear-gradient(180deg, var(--verde-claro) 0%, var(--blanco-natural) 100%);
+  position: relative;
+}
+
+.animales-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--verde-primario), var(--dorado), var(--verde-primario));
+}
+
+/* ============================================
+   SECCIÓN ¿POR QUÉ ELEGIRNOS?
+   ============================================ */
+
+.por-que-section {
+  background: var(--verde-primario);
+  color: var(--blanco);
+}
+
+.por-que-section .section-title,
+.por-que-section .section-subtitle {
+  color: var(--blanco);
+}
+
+.por-que-section .section-subtitle {
+  opacity: 0.9;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 32px;
+}
+
+.feature-card {
+  text-align: center;
+  padding: 32px 24px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radio-medio);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: var(--transicion-media);
+}
+
+.feature-card:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-5px);
+}
+
+.feature-icon {
+  font-size: 3rem;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.feature-title {
+  font-size: 1.3rem;
+  color: var(--blanco);
+  margin-bottom: 12px;
+  font-family: var(--fuente-titulos);
+}
+
+.feature-description {
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+}
+
+/* ============================================
+   FORMULARIO DE RESERVA
+   ============================================ */
+
+.reservas-section {
+  background: var(--blanco-natural);
+}
+
+.booking-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: var(--blanco);
+  border-radius: var(--radio-medio);
+  box-shadow: 0 8px 40px var(--sombra-suave);
+  overflow: hidden;
+}
+
+.booking-header {
+  background: linear-gradient(135deg, var(--verde-primario), var(--verde-secundario));
+  color: var(--blanco);
+  padding: 32px;
+  text-align: center;
+}
+
+.booking-header h2 {
+  color: var(--blanco);
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.booking-header p {
+  opacity: 0.9;
+}
+
+.booking-body {
+  padding: 40px;
+}
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-label {
+  display: block;
+  font-weight: 600;
+  color: var(--verde-primario);
+  margin-bottom: 8px;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: 14px 18px;
+  border: 2px solid var(--verde-claro);
+  border-radius: var(--radio-pequeno);
+  font-size: 1rem;
+  font-family: var(--fuente-cuerpo);
+  transition: var(--transicion-suave);
+  background: var(--blanco);
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--verde-acento);
+  box-shadow: 0 0 0 4px rgba(82, 196, 122, 0.1);
+}
+
+.form-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.form-checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.form-checkbox {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--verde-acento);
+}
+
+.price-summary {
+  background: var(--verde-claro);
+  border-radius: var(--radio-pequeno);
+  padding: 24px;
+  margin-top: 24px;
+}
+
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(26, 92, 56, 0.1);
+}
+
+.price-row:last-child {
+  border-bottom: none;
+  padding-top: 16px;
+  margin-top: 8px;
+}
+
+.price-label {
+  color: var(--gris-texto);
+}
+
+.price-value {
+  font-weight: 700;
+  color: var(--verde-primario);
+}
+
+.price-value.highlight {
+  color: var(--dorado);
+  font-size: 1.3rem;
+}
+
+.booking-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.booking-actions .btn {
+  width: 100%;
+  padding: 16px;
+  font-size: 1.1rem;
+}
+
+/* ============================================
+   PAGO
+   ============================================ */
+
+.payment-section {
+  padding: 40px 0;
+}
+
+.payment-summary {
+  background: var(--verde-claro);
+  border-radius: var(--radio-pequeno);
+  padding: 24px;
+  margin-bottom: 32px;
+}
+
+.payment-summary h3 {
+  color: var(--verde-primario);
+  margin-bottom: 16px;
+  font-size: 1.3rem;
+}
+
+.payment-tabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.payment-tab {
+  padding: 16px;
+  border: 2px solid var(--verde-claro);
+  border-radius: var(--radio-pequeno);
+  background: var(--blanco);
+  cursor: pointer;
+  transition: var(--transicion-suave);
+  text-align: center;
+}
+
+.payment-tab:hover {
+  border-color: var(--verde-acento);
+}
+
+.payment-tab.active {
+  border-color: var(--verde-acento);
+  background: var(--verde-primario);
+  color: var(--blanco);
+}
+
+.payment-tab-icon {
+  font-size: 1.5rem;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.payment-tab-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.payment-content {
+  background: var(--blanco);
+  border: 2px solid var(--verde-claro);
+  border-radius: var(--radio-pequeno);
+  padding: 32px;
+}
+
+.payment-content.active {
+  display: block;
+}
+
+.payment-content.hidden {
+  display: none;
+}
+
+/* Tarjeta de crédito animada */
+
+.credit-card-visual {
+  background: linear-gradient(135deg, var(--verde-primario), var(--verde-secundario));
+  border-radius: var(--radio-medio);
+  padding: 24px;
+  color: var(--blanco);
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 30px var(--sombra-media);
+}
+
+.credit-card-visual::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+}
+
+.credit-card-chip {
+  width: 50px;
+  height: 35px;
+  background: linear-gradient(135deg, var(--dorado), var(--dorado-claro));
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+.credit-card-number-display {
+  font-size: 1.4rem;
+  letter-spacing: 4px;
+  margin-bottom: 20px;
+  font-family: monospace;
+}
+
+.credit-card-info {
+  display: flex;
+  justify-content: space-between;
+}
+
+.credit-card-label {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  text-transform: uppercase;
+}
+
+.credit-card-value {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.form-card-input {
+  width: 100%;
+  padding: 14px 18px;
+  border: 2px solid var(--verde-claro);
+  border-radius: var(--radio-pequeno);
+  font-size: 1rem;
+  font-family: var(--fuente-cuerpo);
+  transition: var(--transicion-suave);
+  margin-bottom: 16px;
+}
+
+.form-card-input:focus {
+  outline: none;
+  border-color: var(--verde-acento);
+  box-shadow: 0 0 0 4px rgba(82, 196, 122, 0.1);
+}
+
+.form-card-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* PayPal button */
+
+.paypal-button {
+  background: #FFC439;
+  color: var(--negro);
+  width: 100%;
+  padding: 16px;
+  border-radius: var(--radio-pequeno);
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: var(--transicion-suave);
+}
+
+.paypal-button:hover {
+  background: #F4B529;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 196, 57, 0.4);
+}
+
+/* Transferencia bancaria */
+
+.bank-info {
+  background: var(--verde-claro);
+  border-radius: var(--radio-pequeno);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.bank-info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(26, 92, 56, 0.1);
+}
+
+.bank-info-row:last-child {
+  border-bottom: none;
+}
+
+.bank-info-label {
+  color: var(--gris-texto);
+  font-weight: 500;
+}
+
+.bank-info-value {
+  color: var(--verde-primario);
+  font-weight: 700;
+  font-family: monospace;
+}
+
+/* ============================================
+   CONFIRMACIÓN
+   ============================================ */
+
+.confirmation-container {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.confirmation-check {
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, var(--verde-acento), var(--verde-secundario));
+  border-radius: var(--radio-circular);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  animation: checkBounce 0.6s ease forwards;
+}
+
+.confirmation-check-icon {
+  font-size: 3rem;
+  color: var(--blanco);
+}
+
+.confirmation-title {
+  font-size: 2rem;
+  color: var(--verde-primario);
+  margin-bottom: 16px;
+}
+
+.confirmation-message {
+  color: var(--gris-texto);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.confirmation-number {
+  background: var(--verde-claro);
+  padding: 16px 32px;
+  border-radius: var(--radio-pequeno);
+  display: inline-block;
+  margin-bottom: 24px;
+}
+
+.confirmation-number-label {
+  font-size: 0.9rem;
+  color: var(--gris-texto);
+  margin-bottom: 4px;
+}
+
+.confirmation-number-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--verde-primario);
+  font-family: monospace;
+  letter-spacing: 2px;
+}
+
+.confirmation-details {
+  background: var(--blanco);
+  border: 2px solid var(--verde-claro);
+  border-radius: var(--radio-pequeno);
+  padding: 24px;
+  margin: 24px auto;
+  max-width: 500px;
+  text-align: left;
+}
+
+.confirmation-details h4 {
+  color: var(--verde-primario);
+  margin-bottom: 16px;
+  font-size: 1.2rem;
+}
+
+.confirmation-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--verde-claro);
+}
+
+.confirmation-row:last-child {
+  border-bottom: none;
+}
+
+/* Confetti */
+
+.confetti-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.confetti {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  animation: confettiFall 3s linear forwards;
+}
+
+/* ============================================
+   CONTACTO
+   ============================================ */
+
+.contacto-section {
+  background: var(--blanco);
+}
+
+.contacto-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 32px;
+}
+
+.contacto-card {
+  text-align: center;
+  padding: 32px 24px;
+  background: var(--blanco-natural);
+  border-radius: var(--radio-medio);
+  transition: var(--transicion-media);
+}
+
+.contacto-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px var(--sombra-suave);
+}
+
+.contacto-icon {
+  font-size: 2.5rem;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.contacto-title {
+  font-size: 1.2rem;
+  color: var(--verde-primario);
+  margin-bottom: 8px;
+}
+
+.contacto-info {
+  color: var(--gris-texto);
+  line-height: 1.6;
+}
+
+.contacto-info a {
+  color: var(--verde-acento);
+  font-weight: 600;
+}
+
+.contacto-info a:hover {
+  text-decoration: underline;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+
+.footer {
+  background: var(--verde-primario);
+  color: var(--blanco);
+  padding: 48px 0 24px;
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 40px;
+  margin-bottom: 32px;
+}
+
+.footer-logo {
+  font-family: var(--fuente-titulos);
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.footer-slogan {
+  opacity: 0.9;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.footer-social {
+  display: flex;
+  gap: 16px;
+}
+
+.footer-social-link {
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radio-circular);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  transition: var(--transicion-suave);
+}
+
+.footer-social-link:hover {
+  background: var(--verde-acento);
+  transform: translateY(-3px);
+}
+
+.footer-title {
+  color: var(--blanco);
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+}
+
+.footer-links {
+  list-style: none;
+}
+
+.footer-links li {
+  margin-bottom: 12px;
+}
+
+.footer-links a {
+  opacity: 0.9;
+  transition: var(--transicion-suave);
+}
+
+.footer-links a:hover {
+  opacity: 1;
+  color: var(--verde-acento);
+}
+
+.footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 24px;
+  text-align: center;
+  opacity: 0.8;
+  font-size: 0.9rem;
+}
+
+.footer-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--verde-acento);
+  font-weight: 600;
+}
+
+/* ============================================
+   BOTÓN FLOTANTE WHATSAPP
+   ============================================ */
+
+.whatsapp-float {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999;
+  background: #25D366;
+  color: var(--blanco);
+  padding: 14px 24px;
+  border-radius: var(--radio-grande);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);
+  transition: var(--transicion-suave);
+  animation: pulse 2s infinite;
+}
+
+.whatsapp-float:hover {
+  background: #1EBE5B;
+  transform: scale(1.05);
+  box-shadow: 0 6px 30px rgba(37, 211, 102, 0.6);
+}
+
+.whatsapp-float-icon {
+  font-size: 1.5rem;
+}
+
+/* ============================================
+   MODAL
+   ============================================ */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.modal-container {
+  background: var(--blanco);
+  border-radius: var(--radio-medio);
+  max-width: 450px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease forwards;
+}
+
+.modal-header {
+  background: linear-gradient(135deg, var(--verde-primario), var(--verde-secundario));
+  color: var(--blanco);
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  color: var(--blanco);
+  font-size: 1.5rem;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: var(--blanco);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transicion-suave);
+}
+
+.modal-close:hover {
+  transform: rotate(90deg);
+}
+
+.modal-body {
+  padding: 32px 24px;
+}
+
+.modal-footer {
+  padding: 24px;
+  border-top: 1px solid var(--verde-claro);
+}
+
+/* ============================================
+   ADMIN PANEL
+   ============================================ */
+
+.admin-panel {
+  min-height: 100vh;
+  background: var(--blanco-natural);
+  padding: 100px 20px 40px;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.admin-header h2 {
+  color: var(--verde-primario);
+  font-size: 2rem;
+}
+
+.admin-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.admin-tab {
+  padding: 12px 24px;
+  background: var(--blanco);
+  border: 2px solid var(--verde-claro);
+  border-radius: var(--radio-pequeno);
+  font-weight: 600;
+  color: var(--gris-texto);
+  cursor: pointer;
+  transition: var(--transicion-suave);
+}
+
+.admin-tab:hover {
+  border-color: var(--verde-acento);
+}
+
+.admin-tab.active {
+  background: var(--verde-primario);
+  border-color: var(--verde-primario);
+  color: var(--blanco);
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.admin-card {
+  background: var(--blanco);
+  border-radius: var(--radio-medio);
+  overflow: hidden;
+  box-shadow: 0 4px 20px var(--sombra-suave);
+}
+
+.admin-card-header {
+  background: linear-gradient(135deg, var(--verde-primario), var(--verde-secundario));
+  color: var(--blanco);
+  padding: 16px 20px;
+}
+
+.admin-card-header h4 {
+  color: var(--blanco);
+  font-size: 1.2rem;
+}
+
+.admin-card-body {
+  padding: 20px;
+}
+
+.admin-photo-preview {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: var(--radio-pequeno);
+  margin-bottom: 16px;
+  background: var(--verde-claro);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+}
+
+.admin-photo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radio-pequeno);
+}
+
+.admin-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.admin-actions .btn {
+  flex: 1;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+}
+
+/* Tabla de reservas */
+
+.reservas-table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow-x: auto;
+  display: block;
+}
+
+.reservas-table thead {
+  background: var(--verde-primario);
+  color: var(--blanco);
+}
+
+.reservas-table th,
+.reservas-table td {
+  padding: 14px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--verde-claro);
+}
+
+.reservas-table th {
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.reservas-table tbody tr:hover {
+  background: var(--verde-claro);
+}
+
+.reservas-table-responsive {
+  overflow-x: auto;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+  .navbar-menu {
+    position: fixed;
+    top: 72px;
+    left: 0;
+    right: 0;
+    background: var(--verde-primario);
+    flex-direction: column;
+    padding: 24px;
+    gap: 16px;
+    transform: translateY(-100%);
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transicion-media);
+  }
+
+  .navbar-menu.active {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .navbar-toggle {
+    display: flex;
+  }
+
+  .navbar-actions {
+    gap: 12px;
+  }
+
+  .navbar-cta {
+    padding: 10px 18px;
+    font-size: 0.85rem;
+  }
+
+  .hero-title {
+    font-size: 2.5rem;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+  }
+
+  .section {
+    padding: 60px 0;
+  }
+
+  .booking-body {
+    padding: 24px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-tabs {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .whatsapp-float {
+    padding: 12px 18px;
+    font-size: 0.9rem;
+    bottom: 16px;
+    right: 16px;
+  }
+
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-tabs {
+    flex-direction: column;
+  }
+
+  .reservas-table {
+    font-size: 0.85rem;
+  }
+
+  .reservas-table th,
+  .reservas-table td {
+    padding: 10px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .form-card-row {
+    grid-template-columns: 1fr;
+  }
+}
