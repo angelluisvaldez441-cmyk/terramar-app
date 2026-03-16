@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react'
 import './index.css'
+import { StripeProvider } from './StripeProvider'
+import { StripeCardForm } from './StripeCardForm'
+import { PayPalButton } from './PayPalButton'
+import { PayPalScriptProvider } from '@paypal/react-paypal-js'
 
 // ============================================
 // DATOS INICIALES
@@ -309,6 +313,8 @@ function ReservasSection({ onReservaCompletada, itemPreseleccionado }) {
     entregaDomicilio: false, direccion: '', tipoEntrega: 'estandar', mensaje: ''
   })
   const [datosTarjeta, setDatosTarjeta] = useState({ numero: '', nombre: '', vencimiento: '', cvv: '' })
+  const [stripePaymentInfo, setStripePaymentInfo] = useState(null)
+  const [paypalPaymentInfo, setPaypalPaymentInfo] = useState(null)
   const [reservaConfirmada, setReservaConfirmada] = useState(null)
   const [procesando, setProcesando] = useState(false)
 
@@ -344,19 +350,51 @@ function ReservasSection({ onReservaCompletada, itemPreseleccionado }) {
 
   const generarNumeroReserva = () => 'TTM-' + Math.random().toString(36).substring(2, 8).toUpperCase()
 
-  const confirmarReserva = async () => {
+  const confirmarReserva = async (paymentInfo = null) => {
     setProcesando(true)
     await new Promise(resolve => setTimeout(resolve, 1500))
     const numeroReserva = generarNumeroReserva()
     const reserva = {
       numero: numeroReserva, ...formData, servicioNombre: servicioSeleccionado?.nombre,
-      total, deposito, resto, metodoPago, fechaReserva: new Date().toISOString(), estado: 'confirmada'
+      total, deposito, resto, metodoPago,
+      stripePaymentId: paymentInfo?.paymentIntentId,
+      cardType: paymentInfo?.cardType,
+      cardLast4: paymentInfo?.last4,
+      testMode: paymentInfo?.testMode,
+      fechaReserva: new Date().toISOString(), estado: 'confirmada'
     }
     const reservasExistentes = await storage.get(STORAGE_KEYS.RESERVAS) || []
     await storage.set(STORAGE_KEYS.RESERVAS, [...reservasExistentes, reserva])
     setReservaConfirmada(reserva)
     setProcesando(false)
     onReservaCompletada(reserva)
+  }
+
+  const handleStripeSuccess = (paymentInfo) => {
+    setStripePaymentInfo(paymentInfo)
+    confirmarReserva(paymentInfo)
+  }
+
+  const handleStripeError = (error) => {
+    console.error('Stripe payment error:', error)
+    setProcesando(false)
+  }
+
+  const handlePaypalSuccess = (details) => {
+    const paymentInfo = {
+      paymentIntentId: details.id,
+      payerEmail: details.payer?.email_address,
+      payerName: details.payer?.name?.given_name + ' ' + details.payer?.name?.surname,
+      status: details.status,
+      testMode: true
+    }
+    setPaypalPaymentInfo(paymentInfo)
+    confirmarReserva(paymentInfo)
+  }
+
+  const handlePaypalError = (error) => {
+    console.error('PayPal payment error:', error)
+    setProcesando(false)
   }
 
   const generarMensajeWhatsApp = () => {
@@ -443,27 +481,51 @@ ${formData.mensaje ? `*Mensaje:* ${formData.mensaje}` : ''}`
               </div>
               {metodoPago === 'tarjeta' && (
                 <div className="payment-content active">
-                  <div className="credit-card-visual">
+                  <div className="credit-card-visual" style={{ marginBottom: '20px' }}>
                     <div className="credit-card-chip"></div>
-                    <div className="credit-card-number-display">{datosTarjeta.numero || '•••• •••• •••• ••••'}</div>
+                    <div className="credit-card-number-display">{stripePaymentInfo?.cardLast4 ? `•••• •••• •••• ${stripePaymentInfo.cardLast4}` : '•••• •••• •••• ••••'}</div>
                     <div className="credit-card-info">
-                      <div><div className="credit-card-label">Titular</div><div className="credit-card-value">{datosTarjeta.nombre || 'NOMBRE APELLIDO'}</div></div>
-                      <div><div className="credit-card-label">Vencimiento</div><div className="credit-card-value">{datosTarjeta.vencimiento || 'MM/AA'}</div></div>
+                      <div><div className="credit-card-label">Titular</div><div className="credit-card-value">{formData.nombre || 'NOMBRE APELLIDO'}</div></div>
+                      <div><div className="credit-card-label">Tipo</div><div className="credit-card-value">{stripePaymentInfo?.cardType ? stripePaymentInfo.cardType.toUpperCase() : 'TARJETA'}</div></div>
                     </div>
                   </div>
-                  <div className="form-group"><label className="form-label">Número de Tarjeta</label><input type="text" name="numero" className="form-card-input" placeholder="1234 5678 9012 3456" value={datosTarjeta.numero} onChange={handleTarjetaChange} /></div>
-                  <div className="form-group"><label className="form-label">Nombre del Titular</label><input type="text" name="nombre" className="form-card-input" placeholder="Como aparece en la tarjeta" value={datosTarjeta.nombre} onChange={(e) => setDatosTarjeta(prev => ({ ...prev, nombre: e.target.value.toUpperCase() }))} /></div>
-                  <div className="form-card-row">
-                    <div className="form-group"><label className="form-label">Vencimiento</label><input type="text" name="vencimiento" className="form-card-input" placeholder="MM/AA" value={datosTarjeta.vencimiento} onChange={handleTarjetaChange} /></div>
-                    <div className="form-group"><label className="form-label">CVV</label><input type="text" name="cvv" className="form-card-input" placeholder="123" value={datosTarjeta.cvv} onChange={handleTarjetaChange} /></div>
-                  </div>
-                  <button className="btn btn-primary" style={{ width: '100%', marginTop: '20px' }} onClick={confirmarReserva} disabled={procesando}>{procesando ? '⏳ Procesando...' : `Pagar RD$${deposito.toLocaleString()} y Confirmar`}</button>
+                  <StripeProvider>
+                    <StripeCardForm
+                      amount={deposito}
+                      onSuccess={handleStripeSuccess}
+                      onError={handleStripeError}
+                      disabled={procesando}
+                    />
+                  </StripeProvider>
                 </div>
               )}
               {metodoPago === 'paypal' && (
                 <div className="payment-content active">
-                  <p style={{ textAlign: 'center', marginBottom: '24px', color: '#8B8B8B' }}>Serás redirigido a PayPal para completar tu pago seguro de <strong>RD${deposito.toLocaleString()}</strong></p>
-                  <button className="paypal-button" onClick={confirmarReserva} disabled={procesando}>{procesando ? '⏳ Redirigiendo...' : '🅿️ Pagar con PayPal'}</button>
+                  <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                    <p style={{ color: '#8B8B8B', marginBottom: '8px' }}>
+                      Pago seguro con PayPal - <strong>RD${deposito.toLocaleString()}</strong>
+                    </p>
+                    <p style={{ fontSize: '0.85rem', color: '#888' }}>
+                      Equivalente a aproximadamente ${(deposito / 58).toFixed(2)} USD
+                    </p>
+                  </div>
+                  <PayPalScriptProvider options={{
+                    clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || "test",
+                    currency: "USD",
+                    intent: "capture"
+                  }}>
+                    <PayPalButton
+                      total={total}
+                      deposito={deposito}
+                      onSuccess={handlePaypalSuccess}
+                      onError={handlePaypalError}
+                    />
+                  </PayPalScriptProvider>
+                  {paypalPaymentInfo && (
+                    <div style={{ marginTop: '16px', padding: '12px', background: '#d4edda', borderRadius: '8px', fontSize: '0.9rem' }}>
+                      ✅ Pago de PayPal completado - ID: {paypalPaymentInfo.paymentIntentId?.substring(0, 20)}...
+                    </div>
+                  )}
                 </div>
               )}
               {metodoPago === 'transferencia' && (
