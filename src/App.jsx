@@ -10,8 +10,8 @@ const VEHICULOS = [
     id: 'moto',
     nombre: 'Moto',
     descripcion: 'Perfecta para explorar la ciudad y caminos cercanos. Ágil y económica.',
-    precio: 1500,
-    precioTexto: 'RD$1,500/día',
+    precio: 800,
+    precioTexto: 'RD$800/día',
     emoji: 'https://kayencorp.com/wp-content/uploads/2025/09/moto-scooter-milano-con-bateria-plomo-acido-scaled.webp'
   },
   {
