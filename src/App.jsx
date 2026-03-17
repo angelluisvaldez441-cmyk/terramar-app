@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react'
 import './index.css'
-import { StripeProvider } from './StripeProvider'
-import { StripeCardForm } from './StripeCardForm'
 import { PayPalButton } from './PayPalButton'
 import { PayPalScriptProvider } from '@paypal/react-paypal-js'
 
@@ -307,13 +305,11 @@ function PorQueSection() {
 
 function ReservasSection({ onReservaCompletada, itemPreseleccionado }) {
   const [paso, setPaso] = useState(1)
-  const [metodoPago, setMetodoPago] = useState('tarjeta')
+  const [metodoPago, setMetodoPago] = useState('paypal')
   const [formData, setFormData] = useState({
     nombre: '', telefono: '', servicio: '', fecha: '', duracion: 1,
     entregaDomicilio: false, direccion: '', tipoEntrega: 'estandar', mensaje: ''
   })
-  const [datosTarjeta, setDatosTarjeta] = useState({ numero: '', nombre: '', vencimiento: '', cvv: '' })
-  const [stripePaymentInfo, setStripePaymentInfo] = useState(null)
   const [paypalPaymentInfo, setPaypalPaymentInfo] = useState(null)
   const [reservaConfirmada, setReservaConfirmada] = useState(null)
   const [procesando, setProcesando] = useState(false)
@@ -357,9 +353,10 @@ function ReservasSection({ onReservaCompletada, itemPreseleccionado }) {
     const reserva = {
       numero: numeroReserva, ...formData, servicioNombre: servicioSeleccionado?.nombre,
       total, deposito, resto, metodoPago,
-      stripePaymentId: paymentInfo?.paymentIntentId,
-      cardType: paymentInfo?.cardType,
-      cardLast4: paymentInfo?.last4,
+      paypalPaymentId: paymentInfo?.paymentIntentId,
+      payerEmail: paymentInfo?.payerEmail,
+      payerName: paymentInfo?.payerName,
+      status: paymentInfo?.status,
       testMode: paymentInfo?.testMode,
       fechaReserva: new Date().toISOString(), estado: 'confirmada'
     }
@@ -368,16 +365,6 @@ function ReservasSection({ onReservaCompletada, itemPreseleccionado }) {
     setReservaConfirmada(reserva)
     setProcesando(false)
     onReservaCompletada(reserva)
-  }
-
-  const handleStripeSuccess = (paymentInfo) => {
-    setStripePaymentInfo(paymentInfo)
-    confirmarReserva(paymentInfo)
-  }
-
-  const handleStripeError = (error) => {
-    console.error('Stripe payment error:', error)
-    setProcesando(false)
   }
 
   const handlePaypalSuccess = (details) => {
@@ -473,85 +460,33 @@ ${formData.mensaje ? `*Mensaje:* ${formData.mensaje}` : ''}`
                 <div className="price-row"><span className="price-label">Depósito (50%):</span><span className="price-value highlight">RD${deposito.toLocaleString()}</span></div>
                 <div className="price-row" style={{ borderBottom: 'none' }}><span className="price-label">Resto al recoger:</span><span className="price-value">RD${resto.toLocaleString()}</span></div>
               </div>
-              <div className="payment-tabs">
-                <button className={`payment-tab ${metodoPago === 'tarjeta' ? 'active' : ''}`} onClick={() => setMetodoPago('tarjeta')}><span className="payment-tab-icon">💳</span><span className="payment-tab-label">Tarjeta</span></button>
-                <button className={`payment-tab ${metodoPago === 'paypal' ? 'active' : ''}`} onClick={() => setMetodoPago('paypal')}><span className="payment-tab-icon">🅿️</span><span className="payment-tab-label">PayPal</span></button>
-                <button className={`payment-tab ${metodoPago === 'transferencia' ? 'active' : ''}`} onClick={() => setMetodoPago('transferencia')}><span className="payment-tab-icon">🏦</span><span className="payment-tab-label">Transferencia</span></button>
-                <button className={`payment-tab ${metodoPago === 'efectivo' ? 'active' : ''}`} onClick={() => setMetodoPago('efectivo')}><span className="payment-tab-icon">💵</span><span className="payment-tab-label">Efectivo</span></button>
+              <div className="payment-content active">
+                <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                  <p style={{ color: '#8B8B8B', marginBottom: '8px' }}>
+                    Pago seguro con PayPal - <strong>RD${deposito.toLocaleString()}</strong>
+                  </p>
+                  <p style={{ fontSize: '0.85rem', color: '#888' }}>
+                    Equivalente a aproximadamente ${(deposito / 58).toFixed(2)} USD
+                  </p>
+                </div>
+                <PayPalScriptProvider options={{
+                  clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || "test",
+                  currency: "USD",
+                  intent: "capture"
+                }}>
+                  <PayPalButton
+                    total={total}
+                    deposito={deposito}
+                    onSuccess={handlePaypalSuccess}
+                    onError={handlePaypalError}
+                  />
+                </PayPalScriptProvider>
+                {paypalPaymentInfo && (
+                  <div style={{ marginTop: '16px', padding: '12px', background: '#d4edda', borderRadius: '8px', fontSize: '0.9rem' }}>
+                    ✅ Pago de PayPal completado - ID: {paypalPaymentInfo.paymentIntentId?.substring(0, 20)}...
+                  </div>
+                )}
               </div>
-              {metodoPago === 'tarjeta' && (
-                <div className="payment-content active">
-                  <div className="credit-card-visual" style={{ marginBottom: '20px' }}>
-                    <div className="credit-card-chip"></div>
-                    <div className="credit-card-number-display">{stripePaymentInfo?.cardLast4 ? `•••• •••• •••• ${stripePaymentInfo.cardLast4}` : '•••• •••• •••• ••••'}</div>
-                    <div className="credit-card-info">
-                      <div><div className="credit-card-label">Titular</div><div className="credit-card-value">{formData.nombre || 'NOMBRE APELLIDO'}</div></div>
-                      <div><div className="credit-card-label">Tipo</div><div className="credit-card-value">{stripePaymentInfo?.cardType ? stripePaymentInfo.cardType.toUpperCase() : 'TARJETA'}</div></div>
-                    </div>
-                  </div>
-                  <StripeProvider>
-                    <StripeCardForm
-                      amount={deposito}
-                      onSuccess={handleStripeSuccess}
-                      onError={handleStripeError}
-                      disabled={procesando}
-                    />
-                  </StripeProvider>
-                </div>
-              )}
-              {metodoPago === 'paypal' && (
-                <div className="payment-content active">
-                  <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-                    <p style={{ color: '#8B8B8B', marginBottom: '8px' }}>
-                      Pago seguro con PayPal - <strong>RD${deposito.toLocaleString()}</strong>
-                    </p>
-                    <p style={{ fontSize: '0.85rem', color: '#888' }}>
-                      Equivalente a aproximadamente ${(deposito / 58).toFixed(2)} USD
-                    </p>
-                  </div>
-                  <PayPalScriptProvider options={{
-                    clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || "test",
-                    currency: "USD",
-                    intent: "capture"
-                  }}>
-                    <PayPalButton
-                      total={total}
-                      deposito={deposito}
-                      onSuccess={handlePaypalSuccess}
-                      onError={handlePaypalError}
-                    />
-                  </PayPalScriptProvider>
-                  {paypalPaymentInfo && (
-                    <div style={{ marginTop: '16px', padding: '12px', background: '#d4edda', borderRadius: '8px', fontSize: '0.9rem' }}>
-                      ✅ Pago de PayPal completado - ID: {paypalPaymentInfo.paymentIntentId?.substring(0, 20)}...
-                    </div>
-                  )}
-                </div>
-              )}
-              {metodoPago === 'transferencia' && (
-                <div className="payment-content active">
-                  <div className="bank-info">
-                    <div className="bank-info-row"><span className="bank-info-label">Banco:</span><span className="bank-info-value">Banco Popular Dominicano</span></div>
-                    <div className="bank-info-row"><span className="bank-info-label">Tipo:</span><span className="bank-info-value">Corriente</span></div>
-                    <div className="bank-info-row"><span className="bank-info-label">Número:</span><span className="bank-info-value">****-****-1234</span></div>
-                    <div className="bank-info-row"><span className="bank-info-label">Titular:</span><span className="bank-info-value">Transporte TerraMar SRL</span></div>
-                  </div>
-                  <p style={{ marginBottom: '24px', lineHeight: '1.6' }}>💡 <strong>Instrucciones:</strong> Realiza una transferencia por RD${deposito.toLocaleString()} y envía el comprobante por WhatsApp.</p>
-                  <button className="btn btn-whatsapp" onClick={abrirWhatsApp}>📱 Enviar comprobante</button>
-                  <button className="btn btn-secondary" style={{ width: '100%', marginTop: '12px' }} onClick={confirmarReserva}>✓ Ya envié el comprobante</button>
-                </div>
-              )}
-              {metodoPago === 'efectivo' && (
-                <div className="payment-content active">
-                  <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                    <span style={{ fontSize: '3rem' }}>💵</span>
-                    <h3 style={{ margin: '16px 0', color: 'var(--verde-primario)' }}>Pago en Efectivo al Recoger</h3>
-                    <p style={{ lineHeight: '1.6', marginBottom: '24px' }}>Deberás pagar el depósito de <strong>RD${deposito.toLocaleString()}</strong> en efectivo cuando recojas el servicio.</p>
-                  </div>
-                  <button className="btn btn-whatsapp" onClick={abrirWhatsApp}>📱 Confirmar por WhatsApp</button>
-                  <button className="btn btn-secondary" style={{ width: '100%', marginTop: '12px' }} onClick={confirmarReserva}>✓ Confirmar reserva</button>
-                </div>
-              )}
               <button className="btn btn-secondary" style={{ width: '100%', marginTop: '20px' }} onClick={() => setPaso(1)}>← Volver al formulario</button>
             </div>
           </div>
