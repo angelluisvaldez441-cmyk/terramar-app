@@ -54,53 +54,19 @@ export function StripeCardForm({ amount, onSuccess, onError, disabled }) {
     setProcessing(true)
 
     try {
-      // 1. Llamar al backend para crear el PaymentIntent
-      const response = await fetch('/api/create-payment-intent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: amount,
-          currency: 'usd',
-        }),
+      // MODO DEMO - Sin backend
+      // Para producción, necesitarás un backend que cree el PaymentIntent
+      await new Promise(resolve => setTimeout(resolve, 2000))
+
+      const cardType = 'visa'
+      const last4 = '4242'
+
+      onSuccess({
+        paymentIntentId: 'demo_' + Date.now(),
+        cardType,
+        last4,
+        testMode: true,
       })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Error al crear el pago')
-      }
-
-      const { clientSecret, paymentIntentId } = await response.json()
-
-      // 2. Confirmar el pago con Stripe usando el clientSecret del backend
-      const { paymentIntent, error: stripeError } = await stripe.confirmCardPayment(
-        clientSecret,
-        {
-          payment_method: {
-            card: elements.getElement(CardElement),
-          },
-        }
-      )
-
-      if (stripeError) {
-        setError(stripeError.message)
-        onError?.(stripeError.message)
-        setProcessing(false)
-        return
-      }
-
-      if (paymentIntent.status === 'succeeded') {
-        const cardType = paymentIntent.payment_method?.card?.brand || 'visa'
-        const last4 = paymentIntent.payment_method?.card?.last4 || '4242'
-
-        onSuccess({
-          paymentIntentId: paymentIntent.id,
-          cardType,
-          last4,
-          testMode: true,
-        })
-      }
 
       setProcessing(false)
     } catch (err) {
