@@ -1518,6 +1518,35 @@ img {
   overflow-x: auto;
 }
 
+.reservas-table .btn-whatsapp-link {
+  color: #25D366;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.reservas-table .btn-whatsapp-link:hover {
+  color: #128C7E;
+  text-decoration: underline;
+}
+
+.reservas-table .btn-delete {
+  background: #ff4d4f;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.reservas-table .btn-delete:hover {
+  background: #ff7875;
+  transform: translateY(-1px);
+}
+
 /* ============================================
    RESPONSIVE
    ============================================ */

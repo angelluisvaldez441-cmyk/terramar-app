@@ -586,6 +586,12 @@ ${formData.mensaje ? `*Mensaje:* ${formData.mensaje}` : ''}`
                       disabled={procesando}
                     />
                   </StripeProvider>
+                  {!stripePaymentInfo && (
+                    <>
+                      <button className="btn btn-whatsapp" onClick={abrirWhatsApp} style={{ width: '100%', marginTop: '12px' }}>📱 Confirmar por WhatsApp</button>
+                      <button className="btn btn-secondary" style={{ width: '100%', marginTop: '12px' }} onClick={confirmarReserva}>✓ Confirmar reserva</button>
+                    </>
+                  )}
                 </div>
               )}
               {metodoPago === 'paypal' && (
@@ -598,22 +604,30 @@ ${formData.mensaje ? `*Mensaje:* ${formData.mensaje}` : ''}`
                       Equivalente a aproximadamente ${(deposito / 58).toFixed(2)} USD
                     </p>
                   </div>
-                  <PayPalScriptProvider options={{
-                    clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID,
-                    currency: "USD",
-                    intent: "capture"
-                  }}>
-                    <PayPalButton
-                      total={total}
-                      deposito={deposito}
-                      onSuccess={handlePaypalSuccess}
-                      onError={handlePaypalError}
-                    />
-                  </PayPalScriptProvider>
+                  {!paypalPaymentInfo && (
+                    <PayPalScriptProvider options={{
+                      clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID,
+                      currency: "USD",
+                      intent: "capture"
+                    }}>
+                      <PayPalButton
+                        total={total}
+                        deposito={deposito}
+                        onSuccess={handlePaypalSuccess}
+                        onError={handlePaypalError}
+                      />
+                    </PayPalScriptProvider>
+                  )}
                   {paypalPaymentInfo && (
                     <div style={{ marginTop: '16px', padding: '12px', background: '#d4edda', borderRadius: '8px', fontSize: '0.9rem' }}>
                       ✅ Pago de PayPal completado - ID: {paypalPaymentInfo.paymentIntentId?.substring(0, 20)}...
                     </div>
+                  )}
+                  {!paypalPaymentInfo && (
+                    <>
+                      <button className="btn btn-whatsapp" onClick={abrirWhatsApp} style={{ width: '100%', marginTop: '12px' }}>📱 Confirmar por WhatsApp</button>
+                      <button className="btn btn-secondary" style={{ width: '100%', marginTop: '12px' }} onClick={confirmarReserva}>✓ Confirmar reserva</button>
+                    </>
                   )}
                 </div>
               )}
@@ -831,12 +845,19 @@ function AdminPanel({ isOpen, onClose, fotos, setFotos }) {
   const [tabActiva, setTabActiva] = useState('fotos')
   const [reservas, setReservas] = useState([])
   const [mostrarAyuda, setMostrarAyuda] = useState(true)
+  const [reservaSeleccionada, setReservaSeleccionada] = useState(null)
 
   useEffect(() => {
     if (isOpen) {
       const cargarReservas = async () => {
         const reservasGuardadas = await storage.get(STORAGE_KEYS.RESERVAS) || []
-        setReservas(reservasGuardadas)
+        // Ordenar por fecha de reserva (más reciente primero)
+        const reservasOrdenadas = [...reservasGuardadas].sort((a, b) => {
+          const fechaA = a.fechaReserva ? new Date(a.fechaReserva).getTime() : 0
+          const fechaB = b.fechaReserva ? new Date(b.fechaReserva).getTime() : 0
+          return fechaA - fechaB // Más antigua primero (orden de llegada)
+        })
+        setReservas(reservasOrdenadas)
       }
       cargarReservas()
     }
@@ -942,27 +963,190 @@ function AdminPanel({ isOpen, onClose, fotos, setFotos }) {
               {reservas.length === 0 ? (
                 <p style={{ textAlign: 'center', padding: '40px', color: '#8B8B8B' }}>No hay reservas registradas</p>
               ) : (
-                <div className="reservas-table-responsive">
-                  <table className="reservas-table">
-                    <thead>
-                      <tr><th>Número</th><th>Nombre</th><th>Servicio</th><th>Fecha</th><th>Duración</th><th>Total</th><th>Depósito</th><th>Método</th></tr>
-                    </thead>
-                    <tbody>
-                      {reservas.map((reserva, index) => (
-                        <tr key={index}>
-                          <td style={{ fontFamily: 'monospace', fontWeight: '600' }}>{reserva.numero}</td>
-                          <td>{reserva.nombre}</td>
-                          <td>{reserva.servicioNombre}</td>
-                          <td>{reserva.fecha}</td>
-                          <td>{reserva.duracion} día(s)</td>
-                          <td style={{ color: 'var(--dorado)', fontWeight: '600' }}>RD${reserva.total?.toLocaleString()}</td>
-                          <td style={{ color: 'var(--verde-acento)', fontWeight: '600' }}>RD${reserva.deposito?.toLocaleString()}</td>
-                          <td style={{ textTransform: 'capitalize' }}>{reserva.metodoPago}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <>
+                  <div className="reservas-table-responsive">
+                    <table className="reservas-table">
+                      <thead>
+                        <tr><th># Orden</th><th>Número</th><th>Nombre</th><th>Teléfono</th><th>Servicio</th><th>Fecha</th><th>Duración</th><th>Total</th><th>Depósito</th><th>Método</th><th>Acciones</th></tr>
+                      </thead>
+                      <tbody>
+                        {reservas.map((reserva, index) => (
+                          <tr key={index}>
+                            <td style={{ fontWeight: '600', color: 'var(--verde-primario)' }}>{index + 1}</td>
+                            <td style={{ fontFamily: 'monospace', fontWeight: '600' }}>{reserva.numero}</td>
+                            <td>{reserva.nombre}</td>
+                            <td>
+                              <a
+                                href={`https://wa.me/1${reserva.telefono?.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${reserva.nombre}, te contacto por tu reserva del servicio: ${reserva.servicioNombre}`)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn-whatsapp-link"
+                                title="Contactar por WhatsApp"
+                              >
+                                📱 {reserva.telefono}
+                              </a>
+                            </td>
+                            <td>{reserva.servicioNombre}</td>
+                            <td>{reserva.fecha}</td>
+                            <td>{reserva.duracion} día(s)</td>
+                            <td style={{ color: 'var(--dorado)', fontWeight: '600' }}>RD${reserva.total?.toLocaleString()}</td>
+                            <td style={{ color: 'var(--verde-acento)', fontWeight: '600' }}>RD${reserva.deposito?.toLocaleString()}</td>
+                            <td style={{ textTransform: 'capitalize' }}>{reserva.metodoPago}</td>
+                            <td>
+                              <div style={{ display: 'flex', gap: '8px' }}>
+                                <button
+                                  onClick={() => setReservaSeleccionada(reserva)}
+                                  className="btn-delete"
+                                  style={{ background: '#1890ff' }}
+                                  title="Ver detalles"
+                                >
+                                  👁️ Ver
+                                </button>
+                                <button
+                                  onClick={async () => {
+                                    if (window.confirm(`¿Eliminar reserva ${reserva.numero}?`)) {
+                                      const nuevasReservas = reservas.filter((_, i) => i !== index)
+                                      setReservas(nuevasReservas)
+                                      await storage.set(STORAGE_KEYS.RESERVAS, nuevasReservas)
+                                    }
+                                  }}
+                                  className="btn-delete"
+                                  title="Eliminar reserva"
+                                >
+                                  🗑️ Eliminar
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Modal de detalles de reserva */}
+                  {reservaSeleccionada && (
+                    <div style={{
+                      position: 'fixed',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background: 'rgba(0,0,0,0.6)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      zIndex: 10000,
+                      padding: '20px'
+                    }} onClick={() => setReservaSeleccionada(null)}>
+                      <div style={{
+                        background: 'white',
+                        borderRadius: '16px',
+                        padding: '32px',
+                        maxWidth: '600px',
+                        width: '100%',
+                        maxHeight: '80vh',
+                        overflow: 'auto',
+                        position: 'relative'
+                      }} onClick={(e) => e.stopPropagation()}>
+                        <button onClick={() => setReservaSeleccionada(null)} style={{
+                          position: 'absolute',
+                          top: '16px',
+                          right: '16px',
+                          background: 'transparent',
+                          border: 'none',
+                          fontSize: '1.5rem',
+                          cursor: 'pointer',
+                          color: '#8B8B8B'
+                        }}>×</button>
+
+                        <h3 style={{ margin: '0 0 24px 0', color: 'var(--verde-primario)' }}>
+                          📋 Reserva #{reservaSeleccionada.numero}
+                        </h3>
+
+                        <div style={{ display: 'grid', gap: '16px' }}>
+                          <div style={{ background: '#f5f5f5', padding: '16px', borderRadius: '8px' }}>
+                            <h4 style={{ margin: '0 0 12px 0', color: 'var(--verde-primario)' }}>👤 Cliente</h4>
+                            <p style={{ margin: '8px 0' }}><strong>Nombre:</strong> {reservaSeleccionada.nombre}</p>
+                            <p style={{ margin: '8px 0' }}>
+                              <strong>Teléfono:</strong>{' '}
+                              <a href={`https://wa.me/1${reservaSeleccionada.telefono?.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${reservaSeleccionada.nombre}, te contacto por tu reserva #${reservaSeleccionada.numero}`)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn-whatsapp-link">
+                                📱 {reservaSeleccionada.telefono}
+                              </a>
+                            </p>
+                            {reservaSeleccionada.email && (
+                              <p style={{ margin: '8px 0' }}><strong>Email:</strong> {reservaSeleccionada.email}</p>
+                            )}
+                          </div>
+
+                          <div style={{ background: '#f5f5f5', padding: '16px', borderRadius: '8px' }}>
+                            <h4 style={{ margin: '0 0 12px 0', color: 'var(--verde-primario)' }}>🚗 Servicio</h4>
+                            <p style={{ margin: '8px 0' }}><strong>Servicio:</strong> {reservaSeleccionada.servicioNombre}</p>
+                            <p style={{ margin: '8px 0' }}><strong>Fecha:</strong> {reservaSeleccionada.fecha}</p>
+                            <p style={{ margin: '8px 0' }}><strong>Duración:</strong> {reservaSeleccionada.duracion} día(s)</p>
+                            {reservaSeleccionada.entregaDomicilio && (
+                              <>
+                                <p style={{ margin: '8px 0', color: 'var(--verde-acento)' }}><strong>🏠 Entrega a domicilio:</strong> Sí</p>
+                                {reservaSeleccionada.tipoEntrega && <p style={{ margin: '8px 0' }}><strong>Tipo:</strong> {reservaSeleccionada.tipoEntrega}</p>}
+                                {reservaSeleccionada.direccion && <p style={{ margin: '8px 0' }}><strong>Dirección:</strong> {reservaSeleccionada.direccion}</p>}
+                              </>
+                            )}
+                          </div>
+
+                          <div style={{ background: '#f5f5f5', padding: '16px', borderRadius: '8px' }}>
+                            <h4 style={{ margin: '0 0 12px 0', color: 'var(--verde-primario)' }}>💰 Pago</h4>
+                            <p style={{ margin: '8px 0' }}><strong>Total:</strong> RD${reservaSeleccionada.total?.toLocaleString()}</p>
+                            <p style={{ margin: '8px 0' }}><strong>Depósito (50%):</strong> RD${reservaSeleccionada.deposito?.toLocaleString()}</p>
+                            <p style={{ margin: '8px 0' }}><strong>Resto al recoger:</strong> RD${(reservaSeleccionada.total - reservaSeleccionada.deposito)?.toLocaleString()}</p>
+                            <p style={{ margin: '8px 0' }}><strong>Método:</strong> {reservaSeleccionada.metodoPago?.toUpperCase()}</p>
+                            {reservaSeleccionada.pagoEstado && (
+                              <p style={{ margin: '8px 0' }}><strong>Estado:</strong> {reservaSeleccionada.pagoEstado}</p>
+                            )}
+                          </div>
+
+                          {reservaSeleccionada.mensaje && (
+                            <div style={{ background: '#f5f5f5', padding: '16px', borderRadius: '8px' }}>
+                              <h4 style={{ margin: '0 0 12px 0', color: 'var(--verde-primario)' }}>📝 Mensaje del cliente</h4>
+                              <p style={{ margin: '8px 0', fontStyle: 'italic' }}>{reservaSeleccionada.mensaje}</p>
+                            </div>
+                          )}
+
+                          <div style={{ display: 'grid', gap: '12px', marginTop: '16px' }}>
+                            <a
+                              href={`https://wa.me/1${reservaSeleccionada.telefono?.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${reservaSeleccionada.nombre}, te contacto por tu reserva #${reservaSeleccionada.numero} del servicio: ${reservaSeleccionada.servicioNombre}`)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn btn-whatsapp"
+                              style={{ textAlign: 'center' }}
+                            >
+                              📱 Contactar por WhatsApp
+                            </a>
+                            <button
+                              onClick={() => {
+                                const texto = `Reserva #${reservaSeleccionada.numero}
+Cliente: ${reservaSeleccionada.nombre}
+Teléfono: ${reservaSeleccionada.telefono}
+Servicio: ${reservaSeleccionada.servicioNombre}
+Fecha: ${reservaSeleccionada.fecha}
+Duración: ${reservaSeleccionada.duracion} día(s)
+Total: RD$${reservaSeleccionada.total?.toLocaleString()}
+Depósito: RD$${reservaSeleccionada.deposito?.toLocaleString()}
+Método: ${reservaSeleccionada.metodoPago}`
+                                navigator.clipboard.writeText(texto)
+                                alert('Información copiada al portapapeles')
+                              }}
+                              className="btn btn-secondary"
+                            >
+                              📋 Copiar información
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
