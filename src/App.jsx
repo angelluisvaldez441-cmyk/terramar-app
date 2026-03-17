@@ -403,6 +403,34 @@ function ReservasSection({ onReservaCompletada, itemPreseleccionado }) {
 
   const generarMensajeWhatsApp = () => {
     const tiposEntrega = { estandar: 'Estándar (ciudad)', playa: 'Playa (zona costera)', montana: 'Montaña (zona montañosa)' }
+
+    // Información del pago según método
+    let infoPago = ''
+    if (reservaConfirmada) {
+      if (reservaConfirmada.metodoPago === 'tarjeta' && reservaConfirmada.cardLast4) {
+        infoPago = `*Método de pago:* Tarjeta 💳
+*Tipo:* ${reservaConfirmada.cardType?.toUpperCase() || 'VISA'}
+*Terminación:* **** ${reservaConfirmada.cardLast4}
+*Estado:* ✅ PAGADO`
+      } else if (reservaConfirmada.metodoPago === 'paypal' && reservaConfirmada.payerEmail) {
+        infoPago = `*Método de pago:* PayPal 🅿️
+*Email:* ${reservaConfirmada.payerEmail}
+*Nombre:* ${reservaConfirmada.payerName || 'N/A'}
+*Transacción ID:* ${reservaConfirmada.paypalPaymentId?.substring(0, 15)}...
+*Estado:* ✅ PAGADO`
+      } else if (reservaConfirmada.metodoPago === 'transferencia') {
+        infoPago = `*Método de pago:* Transferencia 🏦
+*Estado:* ⏳ Pendiente comprobante`
+      } else if (reservaConfirmada.metodoPago === 'efectivo') {
+        infoPago = `*Método de pago:* Efectivo 💵
+*Estado:* ⏳ Pendiente pago al recoger`
+      } else {
+        infoPago = `*Método de pago:* ${reservaConfirmada.metodoPago}`
+      }
+    } else {
+      infoPago = `*Método de pago:* ${metodoPago}`
+    }
+
     const mensaje = `🌴 *Reserva Transporte TerraMar* 🌴
 
 *Nombre:* ${formData.nombre}
@@ -419,7 +447,7 @@ Total: RD$${total.toLocaleString()}
 Depósito (50%): RD$${deposito.toLocaleString()}
 Resto al recoger: RD$${resto.toLocaleString()}
 
-*Método de pago:* ${metodoPago}
+${infoPago}
 ${reservaConfirmada ? `*Número de reserva:* ${reservaConfirmada.numero}` : ''}
 ${formData.mensaje ? `*Mensaje:* ${formData.mensaje}` : ''}`
     return encodeURIComponent(mensaje)
@@ -442,6 +470,59 @@ ${formData.mensaje ? `*Mensaje:* ${formData.mensaje}` : ''}`
                 <div className="confirmation-number-label">Número de Reserva</div>
                 <div className="confirmation-number-value">{reservaConfirmada.numero}</div>
               </div>
+
+              {/* Información del pago */}
+              <div className="payment-info-box" style={{
+                background: reservaConfirmada.metodoPago === 'tarjeta' || reservaConfirmada.metodoPago === 'paypal'
+                  ? '#d4edda'
+                  : '#fff3cd',
+                padding: '16px',
+                borderRadius: '8px',
+                marginBottom: '20px',
+                textAlign: 'center'
+              }}>
+                {reservaConfirmada.metodoPago === 'tarjeta' && (
+                  <>
+                    <p style={{ margin: '0 0 8px 0', fontWeight: '600', color: '#155724' }}>
+                      💳 Pago con Tarjeta completado
+                    </p>
+                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#155724' }}>
+                      Tarjeta terminada en **** {reservaConfirmada.cardLast4 || '••••'}
+                    </p>
+                  </>
+                )}
+                {reservaConfirmada.metodoPago === 'paypal' && (
+                  <>
+                    <p style={{ margin: '0 0 8px 0', fontWeight: '600', color: '#155724' }}>
+                      🅿️ Pago con PayPal completado
+                    </p>
+                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#155724' }}>
+                      {reservaConfirmada.payerEmail || 'Pago realizado'}
+                    </p>
+                  </>
+                )}
+                {reservaConfirmada.metodoPago === 'transferencia' && (
+                  <>
+                    <p style={{ margin: '0 0 8px 0', fontWeight: '600', color: '#856404' }}>
+                      🏦 Transferencia bancaria
+                    </p>
+                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#856404' }}>
+                      Envía el comprobante por WhatsApp
+                    </p>
+                  </>
+                )}
+                {reservaConfirmada.metodoPago === 'efectivo' && (
+                  <>
+                    <p style={{ margin: '0 0 8px 0', fontWeight: '600', color: '#856404' }}>
+                      💵 Pago en efectivo
+                    </p>
+                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#856404' }}>
+                      Paga al recoger el servicio
+                    </p>
+                  </>
+                )}
+              </div>
+
               <div className="confirmation-details">
                 <h4>📋 Resumen de tu Reserva</h4>
                 <div className="confirmation-row"><span>Servicio:</span><strong>{reservaConfirmada.servicioNombre}</strong></div>
@@ -452,8 +533,12 @@ ${formData.mensaje ? `*Mensaje:* ${formData.mensaje}` : ''}`
                 <div className="confirmation-row"><span>Resto:</span><strong>RD${reservaConfirmada.resto.toLocaleString()}</strong></div>
               </div>
               <div className="booking-actions">
-                <button className="btn btn-whatsapp" onClick={abrirWhatsApp}>📱 Confirmar por WhatsApp</button>
-                <button className="btn btn-secondary" onClick={() => { setReservaConfirmada(null); setFormData({ nombre: '', telefono: '', servicio: '', fecha: '', duracion: 1, entregaDomicilio: false, direccion: '', tipoEntrega: 'estandar', mensaje: '' }); setPaso(1) }}>Hacer otra reserva</button>
+                <button className="btn btn-whatsapp" onClick={abrirWhatsApp}>
+                  📱 Enviar comprobante por WhatsApp
+                </button>
+                <button className="btn btn-secondary" onClick={() => { setReservaConfirmada(null); setFormData({ nombre: '', telefono: '', servicio: '', fecha: '', duracion: 1, entregaDomicilio: false, direccion: '', tipoEntrega: 'estandar', mensaje: '' }); setPaso(1) }}>
+                  Hacer otra reserva
+                </button>
               </div>
             </div>
           </div>
