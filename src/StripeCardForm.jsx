@@ -54,10 +54,28 @@ export function StripeCardForm({ amount, onSuccess, onError, disabled }) {
     setProcessing(true)
 
     try {
-      // En modo prueba, Stripe simula el pago
-      // Para producción, necesitarías un backend que cree el PaymentIntent
+      // 1. Llamar al backend para crear el PaymentIntent
+      const response = await fetch('/api/create-payment-intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: amount,
+          currency: 'usd',
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Error al crear el pago')
+      }
+
+      const { clientSecret, paymentIntentId } = await response.json()
+
+      // 2. Confirmar el pago con Stripe usando el clientSecret del backend
       const { paymentIntent, error: stripeError } = await stripe.confirmCardPayment(
-        'pm_card_visa', // Esto es solo para demo - en prod vendría del backend
+        clientSecret,
         {
           payment_method: {
             card: elements.getElement(CardElement),
@@ -75,7 +93,7 @@ export function StripeCardForm({ amount, onSuccess, onError, disabled }) {
       if (paymentIntent.status === 'succeeded') {
         const cardType = paymentIntent.payment_method?.card?.brand || 'visa'
         const last4 = paymentIntent.payment_method?.card?.last4 || '4242'
-        
+
         onSuccess({
           paymentIntentId: paymentIntent.id,
           cardType,
@@ -116,11 +134,11 @@ export function StripeCardForm({ amount, onSuccess, onError, disabled }) {
 
       {/* Mensajes de error */}
       {error && (
-        <div className="stripe-error-message" style={{ 
-          marginTop: '12px', 
-          padding: '12px', 
-          background: '#ffebee', 
-          borderRadius: '8px', 
+        <div className="stripe-error-message" style={{
+          marginTop: '12px',
+          padding: '12px',
+          background: '#ffebee',
+          borderRadius: '8px',
           color: '#c62828',
           fontSize: '0.9rem'
         }}>
