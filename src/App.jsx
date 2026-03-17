@@ -735,7 +735,7 @@ function ContactoSection() {
         <div className="contacto-grid">
           <div className="contacto-card animate-on-scroll"><span className="contacto-icon">📱</span><h3 className="contacto-title">WhatsApp</h3><p className="contacto-info"><a href="https://wa.me/18297234139" target="_blank" rel="noopener noreferrer">829-723-4139</a></p></div>
           <div className="contacto-card animate-on-scroll"><span className="contacto-icon">📧</span><h3 className="contacto-title">Email</h3><p className="contacto-info"><a href="mailto:info@terramar.do">info@terramar.do</a></p></div>
-          <div className="contacto-card animate-on-scroll"><span className="contacto-icon">📍</span><h3 className="contacto-title">Ubicación</h3><p className="contacto-info">Barahona, República Dominicana</p></div>
+          <div className="contacto-card animate-on-scroll"><span className="contacto-icon">📍</span><h3 className="contacto-title">Ubicación</h3><p className="contacto-info"><a href="https://maps.app.goo.gl/MDwvxePn5M8xg5Me7" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--verde-primario)', fontWeight: '600' }}>🗺️ Ver en Google Maps</a><br /><span style={{ fontSize: '0.9rem', opacity: 0.8 }}>Barahona 81000, República Dominicana</span></p></div>
           <div className="contacto-card animate-on-scroll"><span className="contacto-icon">🌐</span><h3 className="contacto-title">Redes Sociales</h3><p className="contacto-info"><a href="#" style={{ marginRight: '12px' }}>Instagram</a><a href="#">Facebook</a></p></div>
         </div>
         <div style={{ textAlign: 'center', marginTop: '40px' }}>
@@ -773,7 +773,8 @@ function Footer() {
             <h4 className="footer-title">Contacto</h4>
             <ul className="footer-links">
               <li><a href="https://wa.me/18297234139" className="footer-whatsapp" target="_blank" rel="noopener noreferrer">💬 829-723-4139</a></li>
-              <li>Barahona, República Dominicana</li>
+              <li><a href="https://maps.app.goo.gl/MDwvxePn5M8xg5Me7" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--verde-primario)' }}>🗺️ Ver ubicación</a></li>
+              <li>Barahona 81000, República Dominicana</li>
             </ul>
           </div>
         </div>
