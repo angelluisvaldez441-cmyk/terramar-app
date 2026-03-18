@@ -1,9 +1,25 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import './index.css'
 import { StripeProvider } from './StripeProvider'
 import { StripeCardForm } from './StripeCardForm'
 import { PayPalButton } from './PayPalButton'
 import { PayPalScriptProvider } from '@paypal/react-paypal-js'
+import { dbService } from './db'
+
+// Storage keys
+const STORAGE_KEYS = {
+  PHOTO_MOTO: 'photo_moto',
+  PHOTO_JEEP: 'photo_jeep',
+  PHOTO_QUAD: 'photo_quad',
+  PHOTO_LANCHA: 'photo_lancha',
+  PHOTO_ENTREGA: 'photo_entrega',
+  PHOTO_CABALLO: 'photo_caballo',
+  PHOTO_BURRO: 'photo_burro',
+  PHOTO_MULA: 'photo_mula',
+  RESERVAS: 'reservas_terramar',
+  ADMIN_LOGGED: 'admin_logged_in'
+}
 
 // ============================================
 // DATOS INICIALES
@@ -97,19 +113,6 @@ const FEATURES = [
 // FUNCIONES DE STORAGE
 // ============================================
 
-const STORAGE_KEYS = {
-  PHOTO_MOTO: 'photo_moto',
-  PHOTO_JEEP: 'photo_jeep',
-  PHOTO_QUAD: 'photo_quad',
-  PHOTO_LANCHA: 'photo_lancha',
-  PHOTO_ENTREGA: 'photo_entrega',
-  PHOTO_CABALLO: 'photo_caballo',
-  PHOTO_BURRO: 'photo_burro',
-  PHOTO_MULA: 'photo_mula',
-  RESERVAS: 'reservas_terramar',
-  ADMIN_LOGGED: 'admin_logged_terramar'
-}
-
 const storage = {
   async get(key) {
     try {
@@ -156,8 +159,9 @@ function WhatsAppFloat() {
   )
 }
 
-function Navbar({ onAdminClick }) {
+function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const navigate = useNavigate()
   const navLinks = [
     { href: '#inicio', label: 'Inicio' },
     { href: '#vehiculos', label: 'Servicios' },
@@ -171,6 +175,10 @@ function Navbar({ onAdminClick }) {
     e.preventDefault()
     setMenuOpen(false)
     document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const handleAdminClick = () => {
+    navigate('/admin')
   }
 
   return (
@@ -191,7 +199,9 @@ function Navbar({ onAdminClick }) {
           ))}
         </ul>
         <div className="navbar-actions">
-          <button className="navbar-admin" onClick={onAdminClick} aria-label="Panel de administración">🔒</button>
+          <button className="navbar-admin" onClick={handleAdminClick} aria-label="Panel de administración" title="Administración">
+            🔒
+          </button>
           <a href="#reservas" className="btn btn-primary navbar-cta" onClick={(e) => handleNavClick(e, '#reservas')}>Reservar ahora</a>
         </div>
       </div>
@@ -367,8 +377,14 @@ function ReservasSection({ onReservaCompletada, itemPreseleccionado }) {
       testMode: paymentInfo?.testMode,
       fechaReserva: new Date().toISOString(), estado: 'confirmada'
     }
-    const reservasExistentes = await storage.get(STORAGE_KEYS.RESERVAS) || []
-    await storage.set(STORAGE_KEYS.RESERVAS, [...reservasExistentes, reserva])
+    try {
+      await dbService.guardarReserva(reserva)
+    } catch (error) {
+      console.error('Error al guardar reserva en Firebase:', error)
+      // Fallback a localStorage si Firebase falla
+      const reservasExistentes = await storage.get(STORAGE_KEYS.RESERVAS) || []
+      await storage.set(STORAGE_KEYS.RESERVAS, [...reservasExistentes, reserva])
+    }
     setReservaConfirmada(reserva)
     setProcesando(false)
     onReservaCompletada(reserva)
@@ -801,390 +817,23 @@ function Footer() {
   )
 }
 
-function AdminLoginModal({ isOpen, onClose, onLogin }) {
-  const [usuario, setUsuario] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-
-  const handleLogin = (e) => {
-    e.preventDefault()
-    if (usuario === 'admin' && password === 'terramar2025') {
-      onLogin()
-      onClose()
-      setUsuario('')
-      setPassword('')
-      setError('')
-    } else {
-      setError('Usuario o contraseña incorrectos')
-    }
-  }
-
-  if (!isOpen) return null
-
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h3>🔐 Panel de Administración</h3>
-          <button className="modal-close" onClick={onClose}>×</button>
-        </div>
-        <div className="modal-body">
-          <form onSubmit={handleLogin}>
-            <div className="form-group"><label className="form-label">Usuario</label><input type="text" className="form-input" value={usuario} onChange={(e) => setUsuario(e.target.value)} placeholder="admin" /></div>
-            <div className="form-group"><label className="form-label">Contraseña</label><input type="password" className="form-input" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" /></div>
-            {error && <p style={{ color: '#d32f2f', marginBottom: '16px', fontSize: '0.9rem' }}>{error}</p>}
-            <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Iniciar Sesión</button>
-          </form>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function AdminPanel({ isOpen, onClose, fotos, setFotos }) {
-  const [tabActiva, setTabActiva] = useState('fotos')
-  const [reservas, setReservas] = useState([])
-  const [mostrarAyuda, setMostrarAyuda] = useState(true)
-  const [reservaSeleccionada, setReservaSeleccionada] = useState(null)
-
-  useEffect(() => {
-    if (isOpen) {
-      const cargarReservas = async () => {
-        const reservasGuardadas = await storage.get(STORAGE_KEYS.RESERVAS) || []
-        // Ordenar por fecha de reserva (más reciente primero)
-        const reservasOrdenadas = [...reservasGuardadas].sort((a, b) => {
-          const fechaA = a.fechaReserva ? new Date(a.fechaReserva).getTime() : 0
-          const fechaB = b.fechaReserva ? new Date(b.fechaReserva).getTime() : 0
-          return fechaA - fechaB // Más antigua primero (orden de llegada)
-        })
-        setReservas(reservasOrdenadas)
-      }
-      cargarReservas()
-    }
-  }, [isOpen])
-
-  const handleFileChange = async (key, e) => {
-    const file = e.target.files[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = async () => {
-        const base64 = reader.result
-        const nuevosFotos = { ...fotos, [key]: base64 }
-        setFotos(nuevosFotos)
-        await storage.set(key, base64)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const handleLogout = async () => {
-    await storage.remove(STORAGE_KEYS.ADMIN_LOGGED)
-    onClose()
-  }
-
-  const handleResetAllFotos = async () => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar todas las fotos personalizadas?')) {
-      const photoKeys = ['photo_moto', 'photo_jeep', 'photo_quad', 'photo_lancha', 'photo_entrega', 'photo_caballo', 'photo_burro', 'photo_mula']
-      for (const key of photoKeys) await storage.remove(key)
-      setFotos({})
-      alert('Todas las fotos han sido restablecidas')
-    }
-  }
-
-  if (!isOpen) return null
-
-  const itemsAdmin = [
-    { key: 'photo_moto', nombre: 'Moto', emoji: '🏍️' },
-    { key: 'photo_jeep', nombre: 'Jeep 4x4', emoji: '🚙' },
-    { key: 'photo_quad', nombre: 'Quad', emoji: '🏎️' },
-    { key: 'photo_lancha', nombre: 'Lancha', emoji: '🚤' },
-    { key: 'photo_entrega', nombre: 'Entrega', emoji: '🏠' },
-    { key: 'photo_caballo', nombre: 'Caballo', emoji: '🐴' },
-    { key: 'photo_burro', nombre: 'Burro', emoji: '🫏' },
-    { key: 'photo_mula', nombre: 'Mula', emoji: '🐎' }
-  ]
-
-  return (
-    <div className="admin-panel">
-      <div className="container">
-        <div className="admin-header">
-          <h2>🔧 Panel de Administración</h2>
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button className="btn btn-secondary" onClick={handleResetAllFotos}>🔄 Restablecer Fotos</button>
-            <button className="btn btn-secondary" onClick={handleLogout}>Cerrar Sesión</button>
-          </div>
-        </div>
-
-        {mostrarAyuda && (
-          <div style={{ background: 'linear-gradient(135deg, #E8F5E9, #C8E6C9)', border: '2px solid #52C47A', borderRadius: '12px', padding: '20px', marginBottom: '24px', display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
-            <div style={{ fontSize: '2rem' }}>📸</div>
-            <div style={{ flex: 1 }}>
-              <h3 style={{ color: '#1A5C38', marginBottom: '8px', marginTop: 0 }}>¿Cómo cambiar las fotos?</h3>
-              <ol style={{ margin: 0, paddingLeft: '20px', color: '#4A4A4A', lineHeight: 1.6 }}>
-                <li>Haz clic en <strong>"📷 Cambiar foto"</strong> en cualquier tarjeta</li>
-                <li>Selecciona una imagen de tu computadora</li>
-                <li>¡Listo! La imagen se guarda automáticamente</li>
-              </ol>
-              <p style={{ margin: '12px 0 0 0', fontSize: '0.9rem', color: '#8B8B8B' }}>💡 <strong>Tip:</strong> También puedes hacer clic directamente en la imagen para cambiarla</p>
-            </div>
-            <button onClick={() => setMostrarAyuda(false)} style={{ background: 'transparent', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#1A5C38', padding: '0', lineHeight: 1 }}>×</button>
-          </div>
-        )}
-
-        <div className="admin-tabs">
-          <button className={`admin-tab ${tabActiva === 'fotos' ? 'active' : ''}`} onClick={() => setTabActiva('fotos')}>📸 Gestionar Fotos</button>
-          <button className={`admin-tab ${tabActiva === 'reservas' ? 'active' : ''}`} onClick={() => setTabActiva('reservas')}>📋 Ver Reservas ({reservas.length})</button>
-        </div>
-
-        {tabActiva === 'fotos' && (
-          <div className="admin-grid">
-            {itemsAdmin.map((item) => (
-              <div key={item.key} className="admin-card">
-                <div className="admin-card-header"><h4>{item.emoji} {item.nombre}</h4></div>
-                <div className="admin-card-body">
-                  <div className="admin-photo-preview" onClick={() => document.getElementById(`input-${item.key}`)?.click()} style={{ cursor: 'pointer' }}>
-                    {fotos[item.key] ? <img src={fotos[item.key]} alt={item.nombre} /> : <span>{item.emoji}</span>}
-                  </div>
-                  <input type="file" accept="image/*" id={`input-${item.key}`} style={{ display: 'none' }} onChange={(e) => handleFileChange(item.key, e)} />
-                  <div className="admin-actions">
-                    <button className="btn btn-primary" onClick={() => document.getElementById(`input-${item.key}`)?.click()}>📷 Cambiar foto</button>
-                    {fotos[item.key] && <button className="btn btn-secondary" onClick={async () => { const nuevosFotos = { ...fotos }; delete nuevosFotos[item.key]; setFotos(nuevosFotos); await storage.remove(item.key) }}>🗑️ Eliminar</button>}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {tabActiva === 'reservas' && (
-          <div className="admin-card">
-            <div className="admin-card-header"><h4>📋 Listado de Reservas ({reservas.length})</h4></div>
-            <div className="admin-card-body">
-              {reservas.length === 0 ? (
-                <p style={{ textAlign: 'center', padding: '40px', color: '#8B8B8B' }}>No hay reservas registradas</p>
-              ) : (
-                <>
-                  <div className="reservas-table-responsive">
-                    <table className="reservas-table">
-                      <thead>
-                        <tr><th># Orden</th><th>Número</th><th>Nombre</th><th>Teléfono</th><th>Servicio</th><th>Fecha</th><th>Duración</th><th>Total</th><th>Depósito</th><th>Método</th><th>Acciones</th></tr>
-                      </thead>
-                      <tbody>
-                        {reservas.map((reserva, index) => (
-                          <tr key={index}>
-                            <td style={{ fontWeight: '600', color: 'var(--verde-primario)' }}>{index + 1}</td>
-                            <td style={{ fontFamily: 'monospace', fontWeight: '600' }}>{reserva.numero}</td>
-                            <td>{reserva.nombre}</td>
-                            <td>
-                              <a
-                                href={`https://wa.me/1${reserva.telefono?.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${reserva.nombre}, te contacto por tu reserva del servicio: ${reserva.servicioNombre}`)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="btn-whatsapp-link"
-                                title="Contactar por WhatsApp"
-                              >
-                                📱 {reserva.telefono}
-                              </a>
-                            </td>
-                            <td>{reserva.servicioNombre}</td>
-                            <td>{reserva.fecha}</td>
-                            <td>{reserva.duracion} día(s)</td>
-                            <td style={{ color: 'var(--dorado)', fontWeight: '600' }}>RD${reserva.total?.toLocaleString()}</td>
-                            <td style={{ color: 'var(--verde-acento)', fontWeight: '600' }}>RD${reserva.deposito?.toLocaleString()}</td>
-                            <td style={{ textTransform: 'capitalize' }}>{reserva.metodoPago}</td>
-                            <td>
-                              <div style={{ display: 'flex', gap: '8px' }}>
-                                <button
-                                  onClick={() => setReservaSeleccionada(reserva)}
-                                  className="btn-delete"
-                                  style={{ background: '#1890ff' }}
-                                  title="Ver detalles"
-                                >
-                                  👁️ Ver
-                                </button>
-                                <button
-                                  onClick={async () => {
-                                    if (window.confirm(`¿Eliminar reserva ${reserva.numero}?`)) {
-                                      const nuevasReservas = reservas.filter((_, i) => i !== index)
-                                      setReservas(nuevasReservas)
-                                      await storage.set(STORAGE_KEYS.RESERVAS, nuevasReservas)
-                                    }
-                                  }}
-                                  className="btn-delete"
-                                  title="Eliminar reserva"
-                                >
-                                  🗑️ Eliminar
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Modal de detalles de reserva */}
-                  {reservaSeleccionada && (
-                    <div style={{
-                      position: 'fixed',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      background: 'rgba(0,0,0,0.6)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      zIndex: 10000,
-                      padding: '20px'
-                    }} onClick={() => setReservaSeleccionada(null)}>
-                      <div style={{
-                        background: 'white',
-                        borderRadius: '16px',
-                        padding: '32px',
-                        maxWidth: '600px',
-                        width: '100%',
-                        maxHeight: '80vh',
-                        overflow: 'auto',
-                        position: 'relative'
-                      }} onClick={(e) => e.stopPropagation()}>
-                        <button onClick={() => setReservaSeleccionada(null)} style={{
-                          position: 'absolute',
-                          top: '16px',
-                          right: '16px',
-                          background: 'transparent',
-                          border: 'none',
-                          fontSize: '1.5rem',
-                          cursor: 'pointer',
-                          color: '#8B8B8B'
-                        }}>×</button>
-
-                        <h3 style={{ margin: '0 0 24px 0', color: 'var(--verde-primario)' }}>
-                          📋 Reserva #{reservaSeleccionada.numero}
-                        </h3>
-
-                        <div style={{ display: 'grid', gap: '16px' }}>
-                          <div style={{ background: '#f5f5f5', padding: '16px', borderRadius: '8px' }}>
-                            <h4 style={{ margin: '0 0 12px 0', color: 'var(--verde-primario)' }}>👤 Cliente</h4>
-                            <p style={{ margin: '8px 0' }}><strong>Nombre:</strong> {reservaSeleccionada.nombre}</p>
-                            <p style={{ margin: '8px 0' }}>
-                              <strong>Teléfono:</strong>{' '}
-                              <a href={`https://wa.me/1${reservaSeleccionada.telefono?.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${reservaSeleccionada.nombre}, te contacto por tu reserva #${reservaSeleccionada.numero}`)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="btn-whatsapp-link">
-                                📱 {reservaSeleccionada.telefono}
-                              </a>
-                            </p>
-                            {reservaSeleccionada.email && (
-                              <p style={{ margin: '8px 0' }}><strong>Email:</strong> {reservaSeleccionada.email}</p>
-                            )}
-                          </div>
-
-                          <div style={{ background: '#f5f5f5', padding: '16px', borderRadius: '8px' }}>
-                            <h4 style={{ margin: '0 0 12px 0', color: 'var(--verde-primario)' }}>🚗 Servicio</h4>
-                            <p style={{ margin: '8px 0' }}><strong>Servicio:</strong> {reservaSeleccionada.servicioNombre}</p>
-                            <p style={{ margin: '8px 0' }}><strong>Fecha:</strong> {reservaSeleccionada.fecha}</p>
-                            <p style={{ margin: '8px 0' }}><strong>Duración:</strong> {reservaSeleccionada.duracion} día(s)</p>
-                            {reservaSeleccionada.entregaDomicilio && (
-                              <>
-                                <p style={{ margin: '8px 0', color: 'var(--verde-acento)' }}><strong>🏠 Entrega a domicilio:</strong> Sí</p>
-                                {reservaSeleccionada.tipoEntrega && <p style={{ margin: '8px 0' }}><strong>Tipo:</strong> {reservaSeleccionada.tipoEntrega}</p>}
-                                {reservaSeleccionada.direccion && <p style={{ margin: '8px 0' }}><strong>Dirección:</strong> {reservaSeleccionada.direccion}</p>}
-                              </>
-                            )}
-                          </div>
-
-                          <div style={{ background: '#f5f5f5', padding: '16px', borderRadius: '8px' }}>
-                            <h4 style={{ margin: '0 0 12px 0', color: 'var(--verde-primario)' }}>💰 Pago</h4>
-                            <p style={{ margin: '8px 0' }}><strong>Total:</strong> RD${reservaSeleccionada.total?.toLocaleString()}</p>
-                            <p style={{ margin: '8px 0' }}><strong>Depósito (50%):</strong> RD${reservaSeleccionada.deposito?.toLocaleString()}</p>
-                            <p style={{ margin: '8px 0' }}><strong>Resto al recoger:</strong> RD${(reservaSeleccionada.total - reservaSeleccionada.deposito)?.toLocaleString()}</p>
-                            <p style={{ margin: '8px 0' }}><strong>Método:</strong> {reservaSeleccionada.metodoPago?.toUpperCase()}</p>
-                            {reservaSeleccionada.pagoEstado && (
-                              <p style={{ margin: '8px 0' }}><strong>Estado:</strong> {reservaSeleccionada.pagoEstado}</p>
-                            )}
-                          </div>
-
-                          {reservaSeleccionada.mensaje && (
-                            <div style={{ background: '#f5f5f5', padding: '16px', borderRadius: '8px' }}>
-                              <h4 style={{ margin: '0 0 12px 0', color: 'var(--verde-primario)' }}>📝 Mensaje del cliente</h4>
-                              <p style={{ margin: '8px 0', fontStyle: 'italic' }}>{reservaSeleccionada.mensaje}</p>
-                            </div>
-                          )}
-
-                          <div style={{ display: 'grid', gap: '12px', marginTop: '16px' }}>
-                            <a
-                              href={`https://wa.me/1${reservaSeleccionada.telefono?.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${reservaSeleccionada.nombre}, te contacto por tu reserva #${reservaSeleccionada.numero} del servicio: ${reservaSeleccionada.servicioNombre}`)}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="btn btn-whatsapp"
-                              style={{ textAlign: 'center' }}
-                            >
-                              📱 Contactar por WhatsApp
-                            </a>
-                            <button
-                              onClick={() => {
-                                const texto = `Reserva #${reservaSeleccionada.numero}
-Cliente: ${reservaSeleccionada.nombre}
-Teléfono: ${reservaSeleccionada.telefono}
-Servicio: ${reservaSeleccionada.servicioNombre}
-Fecha: ${reservaSeleccionada.fecha}
-Duración: ${reservaSeleccionada.duracion} día(s)
-Total: RD$${reservaSeleccionada.total?.toLocaleString()}
-Depósito: RD$${reservaSeleccionada.deposito?.toLocaleString()}
-Método: ${reservaSeleccionada.metodoPago}`
-                                navigator.clipboard.writeText(texto)
-                                alert('Información copiada al portapapeles')
-                              }}
-                              className="btn btn-secondary"
-                            >
-                              📋 Copiar información
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
 // ============================================
 // COMPONENTE PRINCIPAL
 // ============================================
 
 function App() {
-  const [showAdminLogin, setShowAdminLogin] = useState(false)
-  const [showAdminPanel, setShowAdminPanel] = useState(false)
   const [fotos, setFotos] = useState({})
   const [itemPreseleccionado, setItemPreseleccionado] = useState(null)
 
   useEffect(() => {
-    const cargarFotos = async () => {
-      const keys = Object.values(STORAGE_KEYS).filter(k => k.startsWith('photo_'))
-      const fotosGuardadas = {}
-      for (const key of keys) {
-        const foto = await storage.get(key)
-        if (foto) fotosGuardadas[key] = foto
-      }
-      setFotos(fotosGuardadas)
-    }
-    cargarFotos()
-  }, [])
+    // Escuchar fotos en tiempo real desde Firebase
+    const unsubscribeFotos = dbService.escucharFotosEnTiempoReal((fotosData) => {
+      setFotos(fotosData)
+    })
 
-  useEffect(() => {
-    const verificarSesion = async () => {
-      const logged = await storage.get(STORAGE_KEYS.ADMIN_LOGGED)
-      if (logged) setShowAdminPanel(true)
+    return () => {
+      unsubscribeFotos()
     }
-    verificarSesion()
   }, [])
 
   useEffect(() => {
@@ -1197,18 +846,12 @@ function App() {
     return () => observer.disconnect()
   }, [])
 
-  const handleAdminLogin = async () => {
-    await storage.set(STORAGE_KEYS.ADMIN_LOGGED, true)
-    setShowAdminPanel(true)
-    setShowAdminLogin(false)
-  }
-
   const handleReservaCompletada = (reserva) => console.log('Reserva completada:', reserva)
   const handleReservarItem = (item) => setItemPreseleccionado(item)
 
   return (
     <div className="app">
-      <Navbar onAdminClick={() => setShowAdminLogin(true)} />
+      <Navbar />
       <main>
         <Hero />
         <VehiculosSection fotos={fotos} onReservar={handleReservarItem} />
@@ -1219,8 +862,6 @@ function App() {
       </main>
       <Footer />
       <WhatsAppFloat />
-      <AdminLoginModal isOpen={showAdminLogin} onClose={() => setShowAdminLogin(false)} onLogin={handleAdminLogin} />
-      <AdminPanel isOpen={showAdminPanel} onClose={() => { setShowAdminPanel(false); storage.remove(STORAGE_KEYS.ADMIN_LOGGED) }} fotos={fotos} setFotos={setFotos} />
     </div>
   )
 }
