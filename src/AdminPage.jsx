@@ -123,17 +123,27 @@ function AdminDashboard() {
 
     // Escuchar reservas en tiempo real
     const unsubscribeReservas = dbService.escucharReservasEnTiempoReal((reservasData) => {
-      const reservasOrdenadas = [...reservasData].sort((a, b) => {
-        const fechaA = a.fechaReserva ? new Date(a.fechaReserva).getTime() : 0
-        const fechaB = b.fechaReserva ? new Date(b.fechaReserva).getTime() : 0
-        return fechaA - fechaB
-      })
-      setReservas(reservasOrdenadas)
+      try {
+        const reservasOrdenadas = [...reservasData].sort((a, b) => {
+          const fechaA = a.fechaReserva ? new Date(a.fechaReserva).getTime() : 0
+          const fechaB = b.fechaReserva ? new Date(b.fechaReserva).getTime() : 0
+          return fechaA - fechaB
+        })
+        setReservas(reservasOrdenadas)
+      } catch (error) {
+        console.error('Error al ordenar reservas:', error)
+        setReservas([])
+      }
     })
 
     // Escuchar fotos en tiempo real
     const unsubscribeFotos = dbService.escucharFotosEnTiempoReal((fotosData) => {
-      setFotos(fotosData)
+      try {
+        setFotos(fotosData)
+      } catch (error) {
+        console.error('Error al cargar fotos:', error)
+        setFotos({})
+      }
     })
 
     return () => {
@@ -383,15 +393,20 @@ function AdminDashboard() {
                                     onClick={async () => {
                                       if (window.confirm(`¿Eliminar reserva ${reserva.numero}?`)) {
                                         try {
+                                          // Eliminar de Firebase (el listener en tiempo real actualizará automáticamente)
                                           await dbService.eliminarReserva(reserva.id || reserva.numero)
+                                          // Cerrar el modal si está abierto
+                                          if (reservaSeleccionada && reservaSeleccionada.numero === reserva.numero) {
+                                            setReservaSeleccionada(null)
+                                          }
                                         } catch (error) {
                                           console.error('Error al eliminar reserva:', error)
-                                          const nuevasReservas = reservas.filter((_, i) => i !== index)
-                                          localStorage.setItem(STORAGE_KEYS.RESERVAS, JSON.stringify(nuevasReservas))
+                                          alert('Error al eliminar la reserva. Por favor intenta de nuevo.')
                                         }
                                       }
                                     }}
                                     className="btn-delete"
+                                    disabled={cargando}
                                   >
                                     🗑️
                                   </button>
