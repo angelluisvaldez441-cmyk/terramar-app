@@ -310,6 +310,90 @@ function PorQueSection() {
   )
 }
 
+function VisionMisionValoresSection() {
+  return (
+    <section id="nosotros" className="section vision-mision-valores-section">
+      <div className="container">
+        <div className="vmv-grid">
+          {/* Visión */}
+          <div className="vmv-card animate-on-scroll">
+            <div className="vmv-icon">👁️</div>
+            <h3 className="vmv-title">Nuestra Visión</h3>
+            <p className="vmv-description">
+              Ser la empresa líder en transporte turístico y aventuras ecoturísticas en el Caribe,
+              reconocida por nuestra excelencia en el servicio, compromiso con la naturaleza y
+              experiencias inolvidables que conectan a nuestros clientes con la belleza auténtica
+              de la República Dominicana.
+            </p>
+          </div>
+
+          {/* Misión */}
+          <div className="vmv-card animate-on-scroll">
+            <div className="vmv-icon">🎯</div>
+            <h3 className="vmv-title">Nuestra Misión</h3>
+            <p className="vmv-description">
+              Brindar experiencias de aventura auténticas en Barahona, conectando a nuestros
+              clientes con la belleza natural de la República Dominicana a través de vehículos
+              y animales de alquiler confiables, seguros y de calidad, con un servicio cálido
+              y personalizado que supere sus expectativas.
+            </p>
+          </div>
+
+          {/* Valores */}
+          <div className="vmv-card animate-on-scroll">
+            <div className="vmv-icon">💎</div>
+            <h3 className="vmv-title">Nuestros Valores</h3>
+            <ul className="vmv-list">
+              <li>
+                <span className="vmv-list-icon">🌿</span>
+                <div>
+                  <strong>Compromiso Ambiental</strong>
+                  <p>Cuidamos y respetamos la naturaleza que nos rodea</p>
+                </div>
+              </li>
+              <li>
+                <span className="vmv-list-icon">🤝</span>
+                <div>
+                  <strong>Honestidad</strong>
+                  <p>Trato transparente y justo con cada cliente</p>
+                </div>
+              </li>
+              <li>
+                <span className="vmv-list-icon">⭐</span>
+                <div>
+                  <strong>Excelencia</strong>
+                  <p>Calidad y seguridad en cada servicio</p>
+                </div>
+              </li>
+              <li>
+                <span className="vmv-list-icon">🏝️</span>
+                <div>
+                  <strong>Pasión Local</strong>
+                  <p>Amor por nuestra tierra y cultura dominicana</p>
+                </div>
+              </li>
+              <li>
+                <span className="vmv-list-icon">⏰</span>
+                <div>
+                  <strong>Puntualidad</strong>
+                  <p>Tu tiempo es valioso, lo respetamos</p>
+                </div>
+              </li>
+              <li>
+                <span className="vmv-list-icon">💚</span>
+                <div>
+                  <strong>Servicio Humano</strong>
+                  <p>Atención cálida y personalizada</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function ReservasSection({ onReservaCompletada, itemPreseleccionado }) {
   const [paso, setPaso] = useState(1)
   const [metodoPago, setMetodoPago] = useState('tarjeta')
@@ -502,6 +586,28 @@ ${formData.mensaje ? `*Mensaje:* ${formData.mensaje}` : ''}`
     window.open(`https://wa.me/18297234139?text=${generarMensajeWhatsApp()}`, '_blank')
   }
 
+  const cancelarReserva = async () => {
+    if (window.confirm('¿Estás seguro de que deseas cancelar tu reserva?')) {
+      try {
+        // Buscar la reserva por número para eliminarla
+        const reservas = await dbService.obtenerReservas()
+        const reservaEncontrada = reservas.find(r => r.numeroReserva === reservaConfirmada?.numero)
+        if (reservaEncontrada && reservaEncontrada.id) {
+          await dbService.eliminarReserva(reservaEncontrada.id)
+          alert('✅ Reserva cancelada correctamente')
+          setReservaConfirmada(null)
+          setFormData({ nombre: '', telefono: '', servicio: '', fecha: '', duracion: 1, entregaDomicilio: false, direccion: '', tipoEntrega: 'estandar', mensaje: '' })
+          setPaso(1)
+        } else {
+          alert('❌ No se encontró la reserva para cancelar')
+        }
+      } catch (error) {
+        console.error('Error al cancelar reserva:', error)
+        alert('❌ Error al cancelar la reserva. Por favor intenta de nuevo.')
+      }
+    }
+  }
+
   if (reservaConfirmada) {
     return (
       <section id="reservas" className="section reservas-section">
@@ -583,6 +689,9 @@ ${formData.mensaje ? `*Mensaje:* ${formData.mensaje}` : ''}`
                 </button>
                 <button className="btn btn-secondary" onClick={() => { setReservaConfirmada(null); setFormData({ nombre: '', telefono: '', servicio: '', fecha: '', duracion: 1, entregaDomicilio: false, direccion: '', tipoEntrega: 'estandar', mensaje: '' }); setPaso(1) }}>
                   Hacer otra reserva
+                </button>
+                <button className="btn" style={{ background: '#ff4d4f', color: 'white', width: '100%', marginTop: '12px' }} onClick={cancelarReserva}>
+                  🗑️ Cancelar Reserva
                 </button>
               </div>
             </div>
@@ -891,6 +1000,7 @@ function App() {
         <VehiculosSection fotos={fotos} onReservar={handleReservarItem} />
         <AnimalesSection fotos={fotos} onReservar={handleReservarItem} />
         <PorQueSection />
+        <VisionMisionValoresSection />
         <ReservasSection onReservaCompletada={handleReservaCompletada} itemPreseleccionado={itemPreseleccionado} />
         <ContactoSection />
       </main>

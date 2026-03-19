@@ -1998,3 +1998,133 @@ img {
   font-size: 1.1rem;
   animation: pulse 2s ease-in-out infinite;
 }
+
+/* ============================================
+   SECCIÓN VISIÓN, MISIÓN Y VALORES
+   ============================================ */
+
+.vision-mision-valores-section {
+  background: linear-gradient(135deg, var(--verde-claro), var(--blanco-natural));
+  padding: 100px 0;
+}
+
+.vmv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 32px;
+}
+
+.vmv-card {
+  background: var(--blanco);
+  border-radius: var(--radio-medio);
+  padding: 40px 32px;
+  box-shadow: 0 8px 30px var(--sombra-suave);
+  transition: var(--transicion-media);
+  border: 2px solid transparent;
+}
+
+.vmv-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 40px var(--sombra-media);
+  border-color: var(--verde-acento);
+}
+
+.vmv-icon {
+  font-size: 3.5rem;
+  display: block;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.vmv-title {
+  font-size: 1.8rem;
+  color: var(--verde-primario);
+  text-align: center;
+  margin-bottom: 20px;
+  font-family: var(--fuente-titulos);
+}
+
+.vmv-description {
+  color: var(--gris-texto);
+  line-height: 1.8;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.vmv-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.vmv-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: var(--blanco-natural);
+  border-radius: var(--radio-pequeno);
+  transition: var(--transicion-suave);
+}
+
+.vmv-list li:hover {
+  background: var(--verde-claro);
+  transform: translateX(8px);
+}
+
+.vmv-list-icon {
+  font-size: 1.8rem;
+  flex-shrink: 0;
+}
+
+.vmv-list li strong {
+  display: block;
+  color: var(--verde-primario);
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+  font-family: var(--fuente-titulos);
+}
+
+.vmv-list li p {
+  color: var(--gris-texto);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Responsive para VMV */
+@media (max-width: 768px) {
+  .vision-mision-valores-section {
+    padding: 60px 0;
+  }
+
+  .vmv-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .vmv-card {
+    padding: 32px 24px;
+  }
+
+  .vmv-icon {
+    font-size: 3rem;
+  }
+
+  .vmv-title {
+    font-size: 1.5rem;
+  }
+
+  .vmv-description {
+    font-size: 1rem;
+  }
+
+  .vmv-list li {
+    padding: 12px;
+  }
+
+  .vmv-list-icon {
+    font-size: 1.5rem;
+  }
+}

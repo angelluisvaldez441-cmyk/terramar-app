@@ -118,13 +118,14 @@ function AdminPanelContent({ onClose, fotos, setFotos }) {
   const [tabActiva, setTabActiva] = useState('fotos')
   const [reservas, setReservas] = useState([])
   const [mostrarAyuda, setMostrarAyuda] = useState(true)
+  const [reservaEditar, setReservaEditar] = useState(null)
 
   useEffect(() => {
     // Escuchar reservas en tiempo real
     const unsubscribeReservas = dbService.escucharReservasEnTiempoReal((reservasData) => {
       const reservasOrdenadas = [...reservasData].sort((a, b) => {
-        const fechaA = a.fechaReserva ? new Date(a.fechaReserva).getTime() : 0
-        const fechaB = b.fechaReserva ? new Date(b.fechaReserva).getTime() : 0
+        const fechaA = a.fechaCreacion ? new Date(a.fechaCreacion).getTime() : 0
+        const fechaB = b.fechaCreacion ? new Date(b.fechaCreacion).getTime() : 0
         return fechaA - fechaB
       })
       setReservas(reservasOrdenadas)
@@ -150,6 +151,35 @@ function AdminPanelContent({ onClose, fotos, setFotos }) {
         }
       }
       reader.readAsDataURL(file)
+    }
+  }
+
+  const handleEliminarReserva = async (id, numero) => {
+    if (window.confirm(`¿Estás seguro de eliminar la reserva ${numero}?`)) {
+      try {
+        await dbService.eliminarReserva(id)
+        alert('✅ Reserva eliminada correctamente')
+      } catch (error) {
+        console.error('Error al eliminar:', error)
+        alert('❌ Error al eliminar la reserva')
+      }
+    }
+  }
+
+  const handleEditarReserva = (reserva) => {
+    setReservaEditar({ ...reserva })
+  }
+
+  const handleGuardarEdicion = async () => {
+    if (!reservaEditar) return
+
+    try {
+      await dbService.guardarReserva(reservaEditar)
+      alert('✅ Reserva actualizada correctamente')
+      setReservaEditar(null)
+    } catch (error) {
+      console.error('Error al actualizar:', error)
+      alert('❌ Error al actualizar la reserva')
     }
   }
 
@@ -388,6 +418,7 @@ function AdminPanelContent({ onClose, fotos, setFotos }) {
                           <th style={{ padding: '12px 8px', textAlign: 'left' }}>Total</th>
                           <th style={{ padding: '12px 8px', textAlign: 'left' }}>Depósito</th>
                           <th style={{ padding: '12px 8px', textAlign: 'left' }}>Método</th>
+                          <th style={{ padding: '12px 8px', textAlign: 'left' }}>Acciones</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -401,9 +432,10 @@ function AdminPanelContent({ onClose, fotos, setFotos }) {
                           const total = reserva.total || 0
                           const deposito = reserva.deposito || 0
                           const metodo = reserva.metodoPago || 'N/A'
+                          const id = reserva.id || `local-${index}`
 
                           return (
-                            <tr key={reserva.id || index} style={{ borderBottom: '1px solid var(--verde-claro)' }}>
+                            <tr key={id} style={{ borderBottom: '1px solid var(--verde-claro)' }}>
                               <td style={{ padding: '12px 8px', fontWeight: '600', color: 'var(--verde-primario)' }}>{index + 1}</td>
                               <td style={{ padding: '12px 8px', fontFamily: 'monospace', fontWeight: '600' }}>{numero}</td>
                               <td style={{ padding: '12px 8px' }}>{nombre}</td>
@@ -422,6 +454,40 @@ function AdminPanelContent({ onClose, fotos, setFotos }) {
                               <td style={{ padding: '12px 8px', color: 'var(--dorado)', fontWeight: '600' }}>RD${total.toLocaleString()}</td>
                               <td style={{ padding: '12px 8px', color: 'var(--verde-acento)', fontWeight: '600' }}>RD${deposito.toLocaleString()}</td>
                               <td style={{ padding: '12px 8px', textTransform: 'capitalize' }}>{metodo}</td>
+                              <td style={{ padding: '12px 8px' }}>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                  <button
+                                    onClick={() => handleEditarReserva(reserva)}
+                                    style={{
+                                      background: '#1890ff',
+                                      color: 'white',
+                                      border: 'none',
+                                      borderRadius: '4px',
+                                      padding: '6px 12px',
+                                      cursor: 'pointer',
+                                      fontSize: '0.85rem'
+                                    }}
+                                    title="Editar reserva"
+                                  >
+                                    ✏️ Editar
+                                  </button>
+                                  <button
+                                    onClick={() => handleEliminarReserva(id, numero)}
+                                    style={{
+                                      background: '#ff4d4f',
+                                      color: 'white',
+                                      border: 'none',
+                                      borderRadius: '4px',
+                                      padding: '6px 12px',
+                                      cursor: 'pointer',
+                                      fontSize: '0.85rem'
+                                    }}
+                                    title="Eliminar reserva"
+                                  >
+                                    🗑️ Eliminar
+                                  </button>
+                                </div>
+                              </td>
                             </tr>
                           )
                         })}
@@ -437,6 +503,158 @@ function AdminPanelContent({ onClose, fotos, setFotos }) {
           )}
         </div>
       </div>
+
+      {/* Modal de Edición */}
+      {reservaEditar && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.6)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000,
+          padding: '20px'
+        }} onClick={() => setReservaEditar(null)}>
+          <div onClick={(e) => e.stopPropagation()} style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '32px',
+            maxWidth: '600px',
+            width: '100%',
+            maxHeight: '80vh',
+            overflow: 'auto'
+          }}>
+            <h3 style={{ color: 'var(--verde-primario)', marginBottom: '24px' }}>✏️ Editar Reserva</h3>
+
+            <div style={{ display: 'grid', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Nombre</label>
+                <input
+                  type="text"
+                  value={reservaEditar.nombre || ''}
+                  onChange={(e) => setReservaEditar({ ...reservaEditar, nombre: e.target.value })}
+                  style={{ width: '100%', padding: '10px', border: '2px solid var(--verde-claro)', borderRadius: '8px' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Teléfono</label>
+                <input
+                  type="text"
+                  value={reservaEditar.telefono || ''}
+                  onChange={(e) => setReservaEditar({ ...reservaEditar, telefono: e.target.value })}
+                  style={{ width: '100%', padding: '10px', border: '2px solid var(--verde-claro)', borderRadius: '8px' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Fecha</label>
+                <input
+                  type="date"
+                  value={reservaEditar.fecha || ''}
+                  onChange={(e) => setReservaEditar({ ...reservaEditar, fecha: e.target.value })}
+                  style={{ width: '100%', padding: '10px', border: '2px solid var(--verde-claro)', borderRadius: '8px' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Duración (días)</label>
+                  <input
+                    type="number"
+                    value={reservaEditar.duracion || 1}
+                    onChange={(e) => setReservaEditar({ ...reservaEditar, duracion: parseInt(e.target.value) || 1 })}
+                    style={{ width: '100%', padding: '10px', border: '2px solid var(--verde-claro)', borderRadius: '8px' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Método de Pago</label>
+                  <select
+                    value={reservaEditar.metodoPago || 'efectivo'}
+                    onChange={(e) => setReservaEditar({ ...reservaEditar, metodoPago: e.target.value })}
+                    style={{ width: '100%', padding: '10px', border: '2px solid var(--verde-claro)', borderRadius: '8px' }}
+                  >
+                    <option value="efectivo">Efectivo</option>
+                    <option value="tarjeta">Tarjeta</option>
+                    <option value="transferencia">Transferencia</option>
+                    <option value="paypal">PayPal</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Total</label>
+                  <input
+                    type="number"
+                    value={reservaEditar.total || 0}
+                    onChange={(e) => setReservaEditar({ ...reservaEditar, total: parseInt(e.target.value) || 0 })}
+                    style={{ width: '100%', padding: '10px', border: '2px solid var(--verde-claro)', borderRadius: '8px' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Depósito</label>
+                  <input
+                    type="number"
+                    value={reservaEditar.deposito || 0}
+                    onChange={(e) => setReservaEditar({ ...reservaEditar, deposito: parseInt(e.target.value) || 0 })}
+                    style={{ width: '100%', padding: '10px', border: '2px solid var(--verde-claro)', borderRadius: '8px' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Resto</label>
+                  <input
+                    type="number"
+                    value={(reservaEditar.total || 0) - (reservaEditar.deposito || 0)}
+                    disabled
+                    style={{ width: '100%', padding: '10px', border: '2px solid var(--verde-claro)', borderRadius: '8px', background: '#f5f5f5' }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '24px' }}>
+              <button
+                onClick={handleGuardarEdicion}
+                style={{
+                  background: 'var(--verde-primario)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '12px 24px',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  fontWeight: '600'
+                }}
+              >
+                ✅ Guardar Cambios
+              </button>
+              <button
+                onClick={() => setReservaEditar(null)}
+                style={{
+                  background: '#8B8B8B',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '12px 24px',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  fontWeight: '600'
+                }}
+              >
+                ❌ Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
