@@ -180,7 +180,7 @@ function Navbar({ onAdminClick }) {
     <nav className="navbar">
       <div className="container navbar-container">
         <a href="#inicio" className="navbar-logo" onClick={(e) => handleNavClick(e, '#inicio')}>
-          <span className="navbar-logo-icon">🌴</span>
+          <img src="/logo-terramar.jfif" alt="Transporte TerraMar" className="navbar-logo-image" style={{ height: '50px', width: 'auto', marginRight: '12px', objectFit: 'contain' }} />
           <span>Transporte TerraMar</span>
         </a>
         <button className="navbar-toggle" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu">
@@ -920,7 +920,10 @@ function Footer() {
       <div className="container">
         <div className="footer-content">
           <div>
-            <div className="footer-logo"><span>🌴</span><span>Transporte TerraMar</span></div>
+            <div className="footer-logo">
+              <img src="/logo-terramar.jfif" alt="Transporte TerraMar" style={{ height: '40px', width: 'auto', marginRight: '12px', objectFit: 'contain' }} />
+              <span>Transporte TerraMar</span>
+            </div>
             <p className="footer-slogan">Explora Barahona como nunca antes. Alquiler de vehículos y animales para aventuras ecoturísticas auténticas.</p>
             <div className="footer-social">
               <a href="#" className="footer-social-link" aria-label="Instagram">📷</a>
