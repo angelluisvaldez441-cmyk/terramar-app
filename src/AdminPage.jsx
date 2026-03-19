@@ -391,28 +391,40 @@ function AdminPanelContent({ onClose, fotos, setFotos }) {
                         </tr>
                       </thead>
                       <tbody>
-                        {reservas.map((reserva, index) => (
-                          <tr key={index} style={{ borderBottom: '1px solid var(--verde-claro)' }}>
-                            <td style={{ padding: '12px 8px', fontWeight: '600', color: 'var(--verde-primario)' }}>{index + 1}</td>
-                            <td style={{ padding: '12px 8px', fontFamily: 'monospace', fontWeight: '600' }}>{reserva.numero}</td>
-                            <td style={{ padding: '12px 8px' }}>{reserva.nombre}</td>
-                            <td style={{ padding: '12px 8px' }}>
-                              <a
-                                href={`https://wa.me/1${reserva.telefono?.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${reserva.nombre}, te contacto por tu reserva: ${reserva.servicioNombre}`)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{ color: '#25D366', textDecoration: 'none', fontWeight: '600' }}
-                              >
-                                📱 {reserva.telefono}
-                              </a>
-                            </td>
-                            <td style={{ padding: '12px 8px' }}>{reserva.servicioNombre}</td>
-                            <td style={{ padding: '12px 8px' }}>{reserva.fecha}</td>
-                            <td style={{ padding: '12px 8px', color: 'var(--dorado)', fontWeight: '600' }}>RD${reserva.total?.toLocaleString()}</td>
-                            <td style={{ padding: '12px 8px', color: 'var(--verde-acento)', fontWeight: '600' }}>RD${reserva.deposito?.toLocaleString()}</td>
-                            <td style={{ padding: '12px 8px', textTransform: 'capitalize' }}>{reserva.metodoPago}</td>
-                          </tr>
-                        ))}
+                        {reservas.map((reserva, index) => {
+                          // Soporte para ambos formatos (Firestore y localStorage)
+                          const numero = reserva.numeroReserva || reserva.numero || 'N/A'
+                          const nombre = reserva.nombre || 'N/A'
+                          const telefono = reserva.telefono || 'N/A'
+                          const servicio = reserva.servicio?.nombre || reserva.servicioNombre || 'N/A'
+                          const fecha = reserva.fecha || 'N/A'
+                          const total = reserva.total || 0
+                          const deposito = reserva.deposito || 0
+                          const metodo = reserva.metodoPago || 'N/A'
+
+                          return (
+                            <tr key={reserva.id || index} style={{ borderBottom: '1px solid var(--verde-claro)' }}>
+                              <td style={{ padding: '12px 8px', fontWeight: '600', color: 'var(--verde-primario)' }}>{index + 1}</td>
+                              <td style={{ padding: '12px 8px', fontFamily: 'monospace', fontWeight: '600' }}>{numero}</td>
+                              <td style={{ padding: '12px 8px' }}>{nombre}</td>
+                              <td style={{ padding: '12px 8px' }}>
+                                <a
+                                  href={`https://wa.me/1${telefono?.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${nombre}, te contacto por tu reserva: ${servicio}`)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{ color: '#25D366', textDecoration: 'none', fontWeight: '600' }}
+                                >
+                                  📱 {telefono}
+                                </a>
+                              </td>
+                              <td style={{ padding: '12px 8px' }}>{servicio}</td>
+                              <td style={{ padding: '12px 8px' }}>{fecha}</td>
+                              <td style={{ padding: '12px 8px', color: 'var(--dorado)', fontWeight: '600' }}>RD${total.toLocaleString()}</td>
+                              <td style={{ padding: '12px 8px', color: 'var(--verde-acento)', fontWeight: '600' }}>RD${deposito.toLocaleString()}</td>
+                              <td style={{ padding: '12px 8px', textTransform: 'capitalize' }}>{metodo}</td>
+                            </tr>
+                          )
+                        })}
                       </tbody>
                     </table>
                     <p style={{ marginTop: '20px', padding: '12px', background: '#E8F5E9', borderRadius: '8px', color: '#1A5C38', fontSize: '0.9rem' }}>
@@ -436,19 +448,17 @@ function AdminPanelContent({ onClose, fotos, setFotos }) {
 export function AdminPanel({ isOpen, onClose, fotos, setFotos }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [showLogin, setShowLogin] = useState(false)
+  const [verificando, setVerificando] = useState(true)
 
   useEffect(() => {
-    if (isOpen) {
-      const logged = localStorage.getItem(STORAGE_KEYS.ADMIN_LOGGED)
-      if (logged === 'true') {
-        setIsLoggedIn(true)
-      } else {
-        setShowLogin(true)
-      }
-    } else {
-      setIsLoggedIn(false)
-      setShowLogin(false)
+    // Verificar sesión al cargar
+    const logged = localStorage.getItem(STORAGE_KEYS.ADMIN_LOGGED)
+    if (logged === 'true') {
+      setIsLoggedIn(true)
+    } else if (isOpen) {
+      setShowLogin(true)
     }
+    setVerificando(false)
   }, [isOpen])
 
   const handleLogin = () => {
@@ -462,10 +472,13 @@ export function AdminPanel({ isOpen, onClose, fotos, setFotos }) {
     onClose()
   }
 
+  // No renderizar nada mientras verifica
+  if (verificando) return null
+
   if (!isOpen) return null
 
   if (showLogin || !isLoggedIn) {
-    return <AdminLoginModal isOpen={showLogin || !isLoggedIn} onClose={handleClose} onLogin={handleLogin} />
+    return <AdminLoginModal isOpen={true} onClose={handleClose} onLogin={handleLogin} />
   }
 
   return <AdminPanelContent onClose={handleClose} fotos={fotos} setFotos={setFotos} />

@@ -358,42 +358,65 @@ function ReservasSection({ onReservaCompletada, itemPreseleccionado }) {
   const confirmarReserva = async (paymentInfo = null) => {
     setProcesando(true)
     await new Promise(resolve => setTimeout(resolve, 1500))
+
     const numeroReserva = generarNumeroReserva()
-    const reserva = {
-      numero: numeroReserva, ...formData, servicioNombre: servicioSeleccionado?.nombre,
-      total, deposito, resto, metodoPago,
-      stripePaymentId: paymentInfo?.paymentIntentId,
-      cardType: paymentInfo?.cardType,
-      cardLast4: paymentInfo?.last4,
-      paypalPaymentId: paymentInfo?.paymentIntentId,
-      payerEmail: paymentInfo?.payerEmail,
-      payerName: paymentInfo?.payerName,
-      status: paymentInfo?.status,
-      testMode: paymentInfo?.testMode,
-      fechaReserva: new Date().toISOString(), estado: 'confirmada'
+
+    // Datos completos de la reserva para Firestore
+    const reservaParaFirestore = {
+      numeroReserva: numeroReserva,
+      nombre: formData.nombre,
+      telefono: formData.telefono,
+      servicio: {
+        id: formData.servicio,
+        nombre: servicioSeleccionado?.nombre || ''
+      },
+      fecha: formData.fecha,
+      duracion: formData.duracion,
+      total: total,
+      deposito: deposito,
+      resto: resto,
+      metodoPago: metodoPago,
+      entregaDomicilio: formData.entregaDomicilio,
+      direccion: formData.entregaDomicilio ? formData.direccion : '',
+      fechaCreacion: new Date().toISOString()
     }
 
-    // Usar dbService para guardar (intenta Firebase, fallback a localStorage automáticamente)
+    console.log('📝 Guardando reserva en Firestore:', numeroReserva)
+    console.log('📋 Datos:', reservaParaFirestore)
+
     try {
-      const reservaGuardada = await dbService.guardarReserva(reserva)
-      console.log('✅ Reserva guardada exitosamente:', reservaGuardada.numero)
-    } catch (error) {
-      console.error('Error crítico al guardar reserva:', error)
-      // Último fallback - guardar directamente en localStorage
-      const reservasExistentes = JSON.parse(localStorage.getItem(STORAGE_KEYS.RESERVAS) || '[]')
-      const nuevaReserva = {
-        ...reserva,
-        id: Date.now().toString(),
-        fechaCreacion: new Date().toISOString()
-      }
-      reservasExistentes.push(nuevaReserva)
-      localStorage.setItem(STORAGE_KEYS.RESERVAS, JSON.stringify(reservasExistentes))
-      console.log('⚠️ Reserva guardada en localStorage (último fallback):', nuevaReserva.numero)
-    }
+      const reservaGuardada = await dbService.guardarReserva(reservaParaFirestore)
+      console.log('✅ Reserva guardada exitosamente:', reservaGuardada.id)
 
-    setReservaConfirmada(reserva)
-    setProcesando(false)
-    onReservaCompletada(reserva)
+      // Crear reserva completa para mostrar confirmación
+      const reserva = {
+        numero: numeroReserva,
+        ...formData,
+        servicioNombre: servicioSeleccionado?.nombre,
+        total,
+        deposito,
+        resto,
+        metodoPago,
+        stripePaymentId: paymentInfo?.paymentIntentId,
+        cardType: paymentInfo?.cardType,
+        cardLast4: paymentInfo?.last4,
+        paypalPaymentId: paymentInfo?.paymentIntentId,
+        payerEmail: paymentInfo?.payerEmail,
+        payerName: paymentInfo?.payerName,
+        status: paymentInfo?.status,
+        testMode: paymentInfo?.testMode,
+        fechaReserva: formData.fecha,
+        estado: 'confirmada'
+      }
+
+      setReservaConfirmada(reserva)
+      setProcesando(false)
+      onReservaCompletada(reserva)
+    } catch (error) {
+      console.error('❌ Error crítico al guardar reserva:', error)
+      alert('Error al guardar la reserva. Por favor intenta de nuevo.')
+      setProcesando(false)
+    }
   }
 
   const handleStripeSuccess = (paymentInfo) => {
