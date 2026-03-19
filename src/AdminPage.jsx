@@ -119,11 +119,31 @@ function AdminPanelContent({ onClose, fotos, setFotos }) {
   const [reservas, setReservas] = useState([])
   const [mostrarAyuda, setMostrarAyuda] = useState(true)
   const [reservaEditar, setReservaEditar] = useState(null)
+  const [tiempoActual, setTiempoActual] = useState(Date.now())
+
+  // Actualizar tiempo cada segundo
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTiempoActual(Date.now())
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [])
 
   useEffect(() => {
     // Escuchar reservas en tiempo real
     const unsubscribeReservas = dbService.escucharReservasEnTiempoReal((reservasData) => {
-      const reservasOrdenadas = [...reservasData].sort((a, b) => {
+      // Agrupar reservas por númeroReserva para evitar duplicados
+      const reservasUnicas = {}
+      reservasData.forEach(reserva => {
+        const numero = reserva.numeroReserva || reserva.numero || 'N/A'
+        // Guardar la reserva más reciente para cada número
+        if (!reservasUnicas[numero] || new Date(reserva.fechaCreacion || '0') > new Date(reservasUnicas[numero].fechaCreacion || '0')) {
+          reservasUnicas[numero] = reserva
+        }
+      })
+
+      // Convertir a array y ordenar
+      const reservasOrdenadas = Object.values(reservasUnicas).sort((a, b) => {
         const fechaA = a.fechaCreacion ? new Date(a.fechaCreacion).getTime() : 0
         const fechaB = b.fechaCreacion ? new Date(b.fechaCreacion).getTime() : 0
         return fechaA - fechaB
@@ -181,6 +201,125 @@ function AdminPanelContent({ onClose, fotos, setFotos }) {
       console.error('Error al actualizar:', error)
       alert('❌ Error al actualizar la reserva')
     }
+  }
+
+  const handleMarcarEntregado = async (reserva) => {
+    const confirmar = window.confirm(
+      `¿Marcar reserva ${reserva.numeroReserva || reserva.numero} como ENTREGADA?\n\n` +
+      `El cronómetro comenzará a contar desde este momento.`
+    )
+
+    if (!confirmar) return
+
+    try {
+      const reservaActualizada = {
+        ...reserva,
+        estado: 'entregado',
+        fechaEntrega: new Date().toISOString(),
+        estaPausado: false,
+        tiempoPausado: null
+      }
+      await dbService.guardarReserva(reservaActualizada)
+      alert('✅ Reserva marcada como ENTREGADA. El cronómetro ha iniciado.')
+    } catch (error) {
+      console.error('Error al marcar entregado:', error)
+      alert('❌ Error al actualizar la reserva')
+    }
+  }
+
+  const handlePausarCronometro = async (reserva, tiempo) => {
+    const confirmar = window.confirm(
+      `¿Pausar el cronómetro de la reserva ${reserva.numeroReserva || reserva.numero}?\n\n` +
+      `Tiempo actual: ${tiempo.dias}d ${tiempo.horas}h ${tiempo.minutos}m ${tiempo.segundos}s`
+    )
+
+    if (!confirmar) return
+
+    try {
+      const reservaActualizada = {
+        ...reserva,
+        estaPausado: true,
+        tiempoPausado: new Date().toISOString()
+      }
+      await dbService.guardarReserva(reservaActualizada)
+      alert('⏸️ Cronómetro PAUSADO')
+    } catch (error) {
+      console.error('Error al pausar:', error)
+      alert('❌ Error al pausar el cronómetro')
+    }
+  }
+
+  const handleContinuarCronometro = async (reserva) => {
+    const confirmar = window.confirm(
+      `¿Continuar el cronómetro de la reserva ${reserva.numeroReserva || reserva.numero}?`
+    )
+
+    if (!confirmar) return
+
+    try {
+      const reservaActualizada = {
+        ...reserva,
+        estaPausado: false,
+        tiempoPausado: null
+      }
+      await dbService.guardarReserva(reservaActualizada)
+      alert('▶️ Cronómetro CONTINUANDO')
+    } catch (error) {
+      console.error('Error al continuar:', error)
+      alert('❌ Error al continuar el cronómetro')
+    }
+  }
+
+  const handleMarcarPendiente = async (reserva) => {
+    try {
+      const reservaActualizada = {
+        ...reserva,
+        estado: 'pendiente',
+        fechaEntrega: null
+      }
+      await dbService.guardarReserva(reservaActualizada)
+      alert('✅ Reserva marcada como PENDIENTE')
+    } catch (error) {
+      console.error('Error al marcar pendiente:', error)
+      alert('❌ Error al actualizar la reserva')
+    }
+  }
+
+  // Calcular tiempo transcurrido desde entrega (considerando pausas)
+  const calcularTiempoTranscurrido = (fechaEntrega, estaPausado, tiempoPausado) => {
+    if (!fechaEntrega) return null
+
+    const inicio = new Date(fechaEntrega).getTime()
+    let fin = tiempoActual
+
+    // Si está pausado, calcular hasta la fecha de pausa
+    if (estaPausado && tiempoPausado) {
+      fin = new Date(tiempoPausado).getTime()
+    }
+
+    const diferencia = fin - inicio
+
+    const dias = Math.floor(diferencia / (1000 * 60 * 60 * 24))
+    const horas = Math.floor((diferencia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+    const minutos = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60))
+    const segundos = Math.floor((diferencia % (1000 * 60)) / 1000)
+
+    return {
+      dias,
+      horas,
+      minutos,
+      segundos,
+      totalHoras: diferencia / (1000 * 60 * 60),
+      estaPausado: estaPausado || false
+    }
+  }
+
+  // Verificar si excedió el tiempo
+  const verificarExcesoTiempo = (reserva, tiempoTranscurrido) => {
+    if (!reserva.duracion || !tiempoTranscurrido) return false
+
+    const horasAlquiladas = reserva.duracion * 24
+    return tiempoTranscurrido.totalHoras > horasAlquiladas
   }
 
   const handleLogout = () => {
@@ -415,9 +554,9 @@ function AdminPanelContent({ onClose, fotos, setFotos }) {
                           <th style={{ padding: '12px 8px', textAlign: 'left' }}>Teléfono</th>
                           <th style={{ padding: '12px 8px', textAlign: 'left' }}>Servicio</th>
                           <th style={{ padding: '12px 8px', textAlign: 'left' }}>Fecha</th>
-                          <th style={{ padding: '12px 8px', textAlign: 'left' }}>Total</th>
-                          <th style={{ padding: '12px 8px', textAlign: 'left' }}>Depósito</th>
-                          <th style={{ padding: '12px 8px', textAlign: 'left' }}>Método</th>
+                          <th style={{ padding: '12px 8px', textAlign: 'left' }}>Duración</th>
+                          <th style={{ padding: '12px 8px', textAlign: 'left' }}>Estado</th>
+                          <th style={{ padding: '12px 8px', textAlign: 'left' }}>Cronómetro</th>
                           <th style={{ padding: '12px 8px', textAlign: 'left' }}>Acciones</th>
                         </tr>
                       </thead>
@@ -429,13 +568,22 @@ function AdminPanelContent({ onClose, fotos, setFotos }) {
                           const telefono = reserva.telefono || 'N/A'
                           const servicio = reserva.servicio?.nombre || reserva.servicioNombre || 'N/A'
                           const fecha = reserva.fecha || 'N/A'
-                          const total = reserva.total || 0
-                          const deposito = reserva.deposito || 0
-                          const metodo = reserva.metodoPago || 'N/A'
+                          const duracion = reserva.duracion || 1
+                          const estado = reserva.estado || 'pendiente'
+                          const fechaEntrega = reserva.fechaEntrega
+                          const estaPausado = reserva.estaPausado || false
+                          const tiempoPausado = reserva.tiempoPausado
                           const id = reserva.id || `local-${index}`
 
+                          // Calcular tiempo transcurrido
+                          const tiempo = calcularTiempoTranscurrido(fechaEntrega, estaPausado, tiempoPausado)
+                          const excedioTiempo = verificarExcesoTiempo(reserva, tiempo)
+
                           return (
-                            <tr key={id} style={{ borderBottom: '1px solid var(--verde-claro)' }}>
+                            <tr key={id} style={{
+                              borderBottom: '1px solid var(--verde-claro)',
+                              background: excedioTiempo ? '#ffebee' : 'transparent'
+                            }}>
                               <td style={{ padding: '12px 8px', fontWeight: '600', color: 'var(--verde-primario)' }}>{index + 1}</td>
                               <td style={{ padding: '12px 8px', fontFamily: 'monospace', fontWeight: '600' }}>{numero}</td>
                               <td style={{ padding: '12px 8px' }}>{nombre}</td>
@@ -451,11 +599,93 @@ function AdminPanelContent({ onClose, fotos, setFotos }) {
                               </td>
                               <td style={{ padding: '12px 8px' }}>{servicio}</td>
                               <td style={{ padding: '12px 8px' }}>{fecha}</td>
-                              <td style={{ padding: '12px 8px', color: 'var(--dorado)', fontWeight: '600' }}>RD${total.toLocaleString()}</td>
-                              <td style={{ padding: '12px 8px', color: 'var(--verde-acento)', fontWeight: '600' }}>RD${deposito.toLocaleString()}</td>
-                              <td style={{ padding: '12px 8px', textTransform: 'capitalize' }}>{metodo}</td>
+                              <td style={{ padding: '12px 8px' }}>{duracion} día(s)</td>
                               <td style={{ padding: '12px 8px' }}>
-                                <div style={{ display: 'flex', gap: '8px' }}>
+                                <span style={{
+                                  padding: '4px 12px',
+                                  borderRadius: '12px',
+                                  fontSize: '0.85rem',
+                                  fontWeight: '600',
+                                  background: estado === 'entregado' ? '#4CAF50' : '#FF9800',
+                                  color: 'white'
+                                }}>
+                                  {estado === 'entregado' ? '✅ Entregado' : '⏳ Pendiente'}
+                                </span>
+                              </td>
+                              <td style={{ padding: '12px 8px' }}>
+                                {tiempo ? (
+                                  <div style={{
+                                    fontFamily: 'monospace',
+                                    fontSize: '0.9rem',
+                                    color: excedioTiempo ? '#f44336' : (estaPausado ? '#FF9800' : 'var(--verde-primario)'),
+                                    fontWeight: 'bold'
+                                  }}>
+                                    {tiempo.dias}d {tiempo.horas}h {tiempo.minutos}m {tiempo.segundos}s
+                                    {estaPausado && <span style={{ color: '#FF9800', fontSize: '0.75rem' }}> ⏸️ PAUSADO</span>}
+                                    {excedioTiempo && !estaPausado && <span style={{ color: '#f44336', fontSize: '0.75rem' }}> ⚠️ EXCEDIDO</span>}
+                                  </div>
+                                ) : (
+                                  <span style={{ color: '#8B8B8B', fontSize: '0.85rem' }}>--:--:--</span>
+                                )}
+                              </td>
+                              <td style={{ padding: '12px 8px' }}>
+                                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                  {estado === 'pendiente' ? (
+                                    <button
+                                      onClick={() => handleMarcarEntregado(reserva)}
+                                      style={{
+                                        background: '#4CAF50',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        padding: '6px 10px',
+                                        cursor: 'pointer',
+                                        fontSize: '0.8rem',
+                                        fontWeight: '600'
+                                      }}
+                                      title="Marcar como entregado"
+                                    >
+                                      ✅
+                                    </button>
+                                  ) : (
+                                    <>
+                                      {estaPausado ? (
+                                        <button
+                                          onClick={() => handleContinuarCronometro(reserva)}
+                                          style={{
+                                            background: '#4CAF50',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            padding: '6px 8px',
+                                            cursor: 'pointer',
+                                            fontSize: '0.8rem',
+                                            fontWeight: '600'
+                                          }}
+                                          title="Continuar cronómetro"
+                                        >
+                                          ▶️
+                                        </button>
+                                      ) : (
+                                        <button
+                                          onClick={() => handlePausarCronometro(reserva, tiempo)}
+                                          style={{
+                                            background: '#FF9800',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            padding: '6px 8px',
+                                            cursor: 'pointer',
+                                            fontSize: '0.8rem',
+                                            fontWeight: '600'
+                                          }}
+                                          title="Pausar cronómetro"
+                                        >
+                                          ⏸️
+                                        </button>
+                                      )}
+                                    </>
+                                  )}
                                   <button
                                     onClick={() => handleEditarReserva(reserva)}
                                     style={{
@@ -463,13 +693,13 @@ function AdminPanelContent({ onClose, fotos, setFotos }) {
                                       color: 'white',
                                       border: 'none',
                                       borderRadius: '4px',
-                                      padding: '6px 12px',
+                                      padding: '6px 10px',
                                       cursor: 'pointer',
-                                      fontSize: '0.85rem'
+                                      fontSize: '0.8rem'
                                     }}
                                     title="Editar reserva"
                                   >
-                                    ✏️ Editar
+                                    ✏️
                                   </button>
                                   <button
                                     onClick={() => handleEliminarReserva(id, numero)}
@@ -478,13 +708,13 @@ function AdminPanelContent({ onClose, fotos, setFotos }) {
                                       color: 'white',
                                       border: 'none',
                                       borderRadius: '4px',
-                                      padding: '6px 12px',
+                                      padding: '6px 10px',
                                       cursor: 'pointer',
-                                      fontSize: '0.85rem'
+                                      fontSize: '0.8rem'
                                     }}
                                     title="Eliminar reserva"
                                   >
-                                    🗑️ Eliminar
+                                    🗑️
                                   </button>
                                 </div>
                               </td>
