@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import './index.css'
 import { dbService } from './db'
 
@@ -14,8 +13,7 @@ const STORAGE_KEYS = {
 // PÁGINA DE LOGIN DE ADMINISTRACIÓN
 // ============================================
 
-function AdminLoginPage() {
-  const navigate = useNavigate()
+function AdminLoginPage({ onLogin, onVolver }) {
   const [usuario, setUsuario] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -28,7 +26,7 @@ function AdminLoginPage() {
 
     if (usuario === 'admin' && password === 'terramar2025') {
       await localStorage.setItem(STORAGE_KEYS.ADMIN_LOGGED, true)
-      navigate('/admin/dashboard')
+      onLogin()
     } else {
       setError('Usuario o contraseña incorrectos')
       setCargando(false)
@@ -85,7 +83,7 @@ function AdminLoginPage() {
             <button
               type="button"
               className="btn btn-secondary admin-login-btn"
-              onClick={() => navigate('/')}
+              onClick={onVolver}
             >
               ← Volver al sitio
             </button>
@@ -100,30 +98,37 @@ function AdminLoginPage() {
 // DASHBOARD DE ADMINISTRACIÓN
 // ============================================
 
-function AdminDashboard() {
-  const navigate = useNavigate()
+function AdminDashboard({ onLogout, onVolver }) {
   const [tabActiva, setTabActiva] = useState('fotos')
   const [reservas, setReservas] = useState([])
   const [fotos, setFotos] = useState({})
   const [mostrarAyuda, setMostrarAyuda] = useState(true)
   const [reservaSeleccionada, setReservaSeleccionada] = useState(null)
   const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     // Verificar sesión
     const verificarSesion = async () => {
-      const logged = localStorage.getItem(STORAGE_KEYS.ADMIN_LOGGED)
-      if (!logged) {
-        navigate('/admin')
-        return
+      try {
+        const logged = localStorage.getItem(STORAGE_KEYS.ADMIN_LOGGED)
+        if (!logged || logged !== 'true') {
+          onLogout()
+          return
+        }
+        setCargando(false)
+      } catch (error) {
+        console.error('Error al verificar sesión:', error)
+        setError('Error al cargar el dashboard')
+        setCargando(false)
       }
-      setCargando(false)
     }
     verificarSesion()
 
     // Escuchar reservas en tiempo real
     const unsubscribeReservas = dbService.escucharReservasEnTiempoReal((reservasData) => {
       try {
+        console.log('📋 Reservas recibidas:', reservasData.length)
         const reservasOrdenadas = [...reservasData].sort((a, b) => {
           const fechaA = a.fechaReserva ? new Date(a.fechaReserva).getTime() : 0
           const fechaB = b.fechaReserva ? new Date(b.fechaReserva).getTime() : 0
@@ -150,7 +155,7 @@ function AdminDashboard() {
       unsubscribeReservas()
       unsubscribeFotos()
     }
-  }, [navigate])
+  }, [onLogout])
 
   const handleFileChange = async (key, e) => {
     const file = e.target.files[0]
@@ -173,7 +178,7 @@ function AdminDashboard() {
 
   const handleLogout = async () => {
     localStorage.removeItem(STORAGE_KEYS.ADMIN_LOGGED)
-    navigate('/admin')
+    onLogout()
   }
 
   const handleResetAllFotos = async () => {
@@ -205,9 +210,68 @@ function AdminDashboard() {
 
   if (cargando) {
     return (
-      <div className="admin-loading">
-        <div className="admin-loading-spinner">🌴</div>
-        <p>Cargando panel de administración...</p>
+      <div className="admin-dashboard-page">
+        <header className="admin-dashboard-header">
+          <div className="container">
+            <div className="admin-header-content">
+              <div className="admin-logo-section">
+                <span className="admin-logo">🌴</span>
+                <div>
+                  <h1>Transporte TerraMar</h1>
+                  <p>Panel de Administración</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+        <main className="admin-dashboard-main">
+          <div className="container">
+            <div className="admin-loading">
+              <div className="admin-loading-spinner">🌴</div>
+              <p>Cargando panel de administración...</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="admin-dashboard-page">
+        <header className="admin-dashboard-header">
+          <div className="container">
+            <div className="admin-header-content">
+              <div className="admin-logo-section">
+                <span className="admin-logo">🌴</span>
+                <div>
+                  <h1>Transporte TerraMar</h1>
+                  <p>Panel de Administración</p>
+                </div>
+              </div>
+              <div className="admin-header-actions">
+                <button className="btn btn-secondary" onClick={onVolver}>
+                  🏠 Volver al sitio
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+        <main className="admin-dashboard-main">
+          <div className="container">
+            <div className="admin-card">
+              <div className="admin-card-header">
+                <h4>❌ Error</h4>
+              </div>
+              <div className="admin-card-body">
+                <p style={{ marginBottom: '20px' }}>{error}</p>
+                <button className="btn btn-primary" onClick={() => window.location.reload()}>
+                  🔄 Recargar Página
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     )
   }
@@ -226,6 +290,9 @@ function AdminDashboard() {
               </div>
             </div>
             <div className="admin-header-actions">
+              <button className="btn btn-secondary" onClick={onVolver}>
+                🏠 Volver al sitio
+              </button>
               <a href="/" className="btn btn-secondary" target="_blank" rel="noopener noreferrer">
                 🌐 Ver sitio web
               </a>

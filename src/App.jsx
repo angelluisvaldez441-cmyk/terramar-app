@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import './index.css'
 import { StripeProvider } from './StripeProvider'
 import { StripeCardForm } from './StripeCardForm'
 import { PayPalButton } from './PayPalButton'
 import { PayPalScriptProvider } from '@paypal/react-paypal-js'
 import { dbService } from './db'
+import { AdminLoginPage, AdminDashboard } from './AdminPage.jsx'
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -159,9 +159,8 @@ function WhatsAppFloat() {
   )
 }
 
-function Navbar() {
+function Navbar({ onAdminClick }) {
   const [menuOpen, setMenuOpen] = useState(false)
-  const navigate = useNavigate()
   const navLinks = [
     { href: '#inicio', label: 'Inicio' },
     { href: '#vehiculos', label: 'Servicios' },
@@ -175,10 +174,6 @@ function Navbar() {
     e.preventDefault()
     setMenuOpen(false)
     document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' })
-  }
-
-  const handleAdminClick = () => {
-    navigate('/admin')
   }
 
   return (
@@ -199,7 +194,7 @@ function Navbar() {
           ))}
         </ul>
         <div className="navbar-actions">
-          <button className="navbar-admin" onClick={handleAdminClick} aria-label="Panel de administración" title="Administración">
+          <button className="navbar-admin" onClick={onAdminClick} aria-label="Panel de administración" title="Administración">
             🔒
           </button>
           <a href="#reservas" className="btn btn-primary navbar-cta" onClick={(e) => handleNavClick(e, '#reservas')}>Reservar ahora</a>
@@ -377,14 +372,25 @@ function ReservasSection({ onReservaCompletada, itemPreseleccionado }) {
       testMode: paymentInfo?.testMode,
       fechaReserva: new Date().toISOString(), estado: 'confirmada'
     }
+
+    // Usar dbService para guardar (intenta Firebase, fallback a localStorage automáticamente)
     try {
-      await dbService.guardarReserva(reserva)
+      const reservaGuardada = await dbService.guardarReserva(reserva)
+      console.log('✅ Reserva guardada exitosamente:', reservaGuardada.numero)
     } catch (error) {
-      console.error('Error al guardar reserva en Firebase:', error)
-      // Fallback a localStorage si Firebase falla
-      const reservasExistentes = await storage.get(STORAGE_KEYS.RESERVAS) || []
-      await storage.set(STORAGE_KEYS.RESERVAS, [...reservasExistentes, reserva])
+      console.error('Error crítico al guardar reserva:', error)
+      // Último fallback - guardar directamente en localStorage
+      const reservasExistentes = JSON.parse(localStorage.getItem(STORAGE_KEYS.RESERVAS) || '[]')
+      const nuevaReserva = {
+        ...reserva,
+        id: Date.now().toString(),
+        fechaCreacion: new Date().toISOString()
+      }
+      reservasExistentes.push(nuevaReserva)
+      localStorage.setItem(STORAGE_KEYS.RESERVAS, JSON.stringify(reservasExistentes))
+      console.log('⚠️ Reserva guardada en localStorage (último fallback):', nuevaReserva.numero)
     }
+
     setReservaConfirmada(reserva)
     setProcesando(false)
     onReservaCompletada(reserva)
@@ -822,8 +828,21 @@ function Footer() {
 // ============================================
 
 function App() {
+  const [pagina, setPagina] = useState('inicio') // 'inicio', 'admin', 'dashboard'
+  const [adminLoggedIn, setAdminLoggedIn] = useState(false)
   const [fotos, setFotos] = useState({})
   const [itemPreseleccionado, setItemPreseleccionado] = useState(null)
+  const [verificandoSesion, setVerificandoSesion] = useState(true)
+
+  useEffect(() => {
+    // Verificar sesión de admin al cargar
+    const logged = localStorage.getItem(STORAGE_KEYS.ADMIN_LOGGED)
+    if (logged === 'true') {
+      setAdminLoggedIn(true)
+      setPagina('dashboard')
+    }
+    setVerificandoSesion(false)
+  }, [])
 
   useEffect(() => {
     // Escuchar fotos en tiempo real desde Firebase
@@ -846,12 +865,58 @@ function App() {
     return () => observer.disconnect()
   }, [])
 
+  const handleAdminClick = () => {
+    setPagina('admin')
+  }
+
+  const handleAdminLogin = () => {
+    setAdminLoggedIn(true)
+    setPagina('dashboard')
+  }
+
+  const handleAdminLogout = () => {
+    localStorage.removeItem(STORAGE_KEYS.ADMIN_LOGGED)
+    setAdminLoggedIn(false)
+    setPagina('inicio')
+  }
+
   const handleReservaCompletada = (reserva) => console.log('Reserva completada:', reserva)
   const handleReservarItem = (item) => setItemPreseleccionado(item)
 
+  // Mostrar pantalla de carga mientras verifica sesión
+  if (verificandoSesion) {
+    return (
+      <div className="app-loading">
+        <div className="loading-spinner">🌴</div>
+        <p>Cargando Transporte TerraMar...</p>
+      </div>
+    )
+  }
+
+  // Renderizar página de login de admin
+  if (pagina === 'admin' && !adminLoggedIn) {
+    return (
+      <AdminLoginPage
+        onLogin={handleAdminLogin}
+        onVolver={() => setPagina('inicio')}
+      />
+    )
+  }
+
+  // Renderizar dashboard de admin
+  if (pagina === 'dashboard' && adminLoggedIn) {
+    return (
+      <AdminDashboard
+        onLogout={handleAdminLogout}
+        onVolver={() => setPagina('inicio')}
+      />
+    )
+  }
+
+  // Renderizar sitio principal
   return (
     <div className="app">
-      <Navbar />
+      <Navbar onAdminClick={handleAdminClick} />
       <main>
         <Hero />
         <VehiculosSection fotos={fotos} onReservar={handleReservarItem} />

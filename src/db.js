@@ -19,19 +19,29 @@ import {
   orderBy
 } from 'firebase/firestore'
 
-// Configuración de Firebase
+// Configuración de Firebase - Proyecto: terramar-app
 const firebaseConfig = {
-  apiKey: "AIzaSyDTCCHL_UrdyKa31PlRsOJPJZTdbHwr49g",
-  authDomain: "terramar-app-2865f.firebaseapp.com",
-  projectId: "terramar-app-2865f",
-  storageBucket: "terramar-app-2865f.firebasestorage.app",
-  messagingSenderId: "603093572620",
-  appId: "1:603093572620:web:d4ed5781cc9b846a8ea229"
+  apiKey: "AIzaSyDohqotMsD6ddNl5acJQX_V-tkYOKwQopE",
+  authDomain: "terramar-app.firebaseapp.com",
+  projectId: "terramar-app",
+  storageBucket: "terramar-app.firebasestorage.app",
+  messagingSenderId: "755582276233",
+  appId: "1:755582276233:web:b0e0aebb1dd154e4382c58"
 }
 
 // Inicializar Firebase
-const app = initializeApp(firebaseConfig)
-const db = getFirestore(app)
+let db
+let firebaseDisponible = false
+
+try {
+  const app = initializeApp(firebaseConfig)
+  db = getFirestore(app)
+  firebaseDisponible = true
+  console.log('✅ Firebase inicializado correctamente (terramar-app)')
+} catch (error) {
+  console.error('❌ Error al inicializar Firebase:', error)
+  firebaseDisponible = false
+}
 
 // Storage keys para localStorage (fallback)
 const STORAGE_KEYS = {
@@ -44,112 +54,131 @@ const STORAGE_KEYS = {
 // ============================================
 
 export const obtenerReservas = async () => {
-  try {
-    const q = query(collection(db, 'reservas'), orderBy('fechaReserva', 'asc'))
-    const snapshot = await getDocs(q)
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-  } catch (error) {
-    console.error('Error al obtener reservas de Firebase:', error)
-    // Fallback a localStorage
+  if (firebaseDisponible) {
     try {
-      const item = localStorage.getItem(STORAGE_KEYS.RESERVAS)
-      return item ? JSON.parse(item) : []
+      const q = query(collection(db, 'reservas'), orderBy('fechaReserva', 'asc'))
+      const snapshot = await getDocs(q)
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
     } catch (error) {
-      console.error('Error al obtener reservas de localStorage:', error)
-      return []
+      console.error('Error al obtener reservas de Firebase:', error)
     }
+  }
+  // Fallback a localStorage
+  try {
+    const item = localStorage.getItem(STORAGE_KEYS.RESERVAS)
+    return item ? JSON.parse(item) : []
+  } catch (error) {
+    console.error('Error al obtener reservas de localStorage:', error)
+    return []
   }
 }
 
 export const guardarReserva = async (reserva) => {
-  try {
-    const docRef = doc(collection(db, 'reservas'))
-    const reservaConId = {
-      ...reserva,
-      id: docRef.id, // Guardar el ID generado por Firebase
-      fechaCreacion: new Date().toISOString()
-    }
-    await setDoc(docRef, reservaConId)
-    return { id: docRef.id, ...reservaConId }
-  } catch (error) {
-    console.error('Error al guardar reserva en Firebase:', error)
-    // Fallback a localStorage
+  if (firebaseDisponible) {
     try {
-      const reservasExistentes = JSON.parse(localStorage.getItem(STORAGE_KEYS.RESERVAS) || '[]')
-      const nuevaReserva = {
+      const docRef = doc(collection(db, 'reservas'))
+      const reservaConId = {
         ...reserva,
-        id: Date.now().toString() + '-' + Math.random().toString(36).substring(2, 9),
+        id: docRef.id,
         fechaCreacion: new Date().toISOString()
       }
-      reservasExistentes.push(nuevaReserva)
-      localStorage.setItem(STORAGE_KEYS.RESERVAS, JSON.stringify(reservasExistentes))
-      return nuevaReserva
+      await setDoc(docRef, reservaConId)
+      console.log('✅ Reserva guardada en Firebase:', reservaConId.numero)
+      return { id: docRef.id, ...reservaConId }
     } catch (error) {
-      console.error('Error al guardar reserva en localStorage:', error)
-      throw error
+      console.error('Error al guardar reserva en Firebase:', error)
     }
+  }
+  // Fallback a localStorage
+  try {
+    const reservasExistentes = JSON.parse(localStorage.getItem(STORAGE_KEYS.RESERVAS) || '[]')
+    const nuevaReserva = {
+      ...reserva,
+      id: Date.now().toString() + '-' + Math.random().toString(36).substring(2, 9),
+      fechaCreacion: new Date().toISOString()
+    }
+    reservasExistentes.push(nuevaReserva)
+    localStorage.setItem(STORAGE_KEYS.RESERVAS, JSON.stringify(reservasExistentes))
+    console.log('✅ Reserva guardada en localStorage:', nuevaReserva.numero)
+    return nuevaReserva
+  } catch (error) {
+    console.error('Error al guardar reserva en localStorage:', error)
+    throw error
   }
 }
 
 export const eliminarReserva = async (id) => {
-  // Validar que el ID exista
   if (!id) {
     console.error('ID de reserva no válido')
     throw new Error('ID de reserva no válido')
   }
 
-  try {
-    // Intentar eliminar de Firebase
-    await deleteDoc(doc(db, 'reservas', id))
-    return true
-  } catch (error) {
-    console.error('Error al eliminar reserva de Firebase:', error)
-    // Fallback a localStorage
+  if (firebaseDisponible) {
     try {
-      const reservas = JSON.parse(localStorage.getItem(STORAGE_KEYS.RESERVAS) || '[]')
-      const nuevasReservas = reservas.filter(r => r.id !== id)
-      localStorage.setItem(STORAGE_KEYS.RESERVAS, JSON.stringify(nuevasReservas))
+      await deleteDoc(doc(db, 'reservas', id))
+      console.log('✅ Reserva eliminada de Firebase:', id)
       return true
     } catch (error) {
-      console.error('Error al eliminar reserva de localStorage:', error)
-      throw error
+      console.error('Error al eliminar reserva de Firebase:', error)
     }
+  }
+  // Fallback a localStorage
+  try {
+    const reservas = JSON.parse(localStorage.getItem(STORAGE_KEYS.RESERVAS) || '[]')
+    const nuevasReservas = reservas.filter(r => r.id !== id)
+    localStorage.setItem(STORAGE_KEYS.RESERVAS, JSON.stringify(nuevasReservas))
+    console.log('✅ Reserva eliminada de localStorage:', id)
+    return true
+  } catch (error) {
+    console.error('Error al eliminar reserva de localStorage:', error)
+    throw error
   }
 }
 
 // Escuchar cambios en tiempo real
 export const escucharReservasEnTiempoReal = (callback) => {
-  try {
-    const q = query(collection(db, 'reservas'), orderBy('fechaReserva', 'asc'))
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      try {
-        const reservas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-        callback(reservas)
-      } catch (error) {
-        console.error('Error al procesar snapshot de reservas:', error)
+  if (firebaseDisponible) {
+    try {
+      const q = query(collection(db, 'reservas'), orderBy('fechaReserva', 'asc'))
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        try {
+          const reservas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+          console.log('🔄 Reservas actualizadas (Firebase):', reservas.length)
+          callback(reservas)
+        } catch (error) {
+          console.error('Error al procesar snapshot de reservas:', error)
+          callback([])
+        }
+      }, (error) => {
+        console.error('Error escuchando reservas de Firebase:', error)
+        // Si falla Firebase, usar localStorage
         callback([])
-      }
-    }, (error) => {
-      console.error('Error escuchando reservas:', error)
-      callback([])
-    })
-    return unsubscribe
-  } catch (error) {
-    console.error('Error al establecer listener en tiempo real:', error)
-    // Fallback: poll cada 2 segundos
-    let ultimoEstado = null
-    const verificarCambios = async () => {
-      const reservas = await obtenerReservas()
+      })
+      return unsubscribe
+    } catch (error) {
+      console.error('Error al establecer listener en Firebase:', error)
+    }
+  }
+
+  // Fallback: poll cada 2 segundos desde localStorage
+  console.log('⚠️ Usando localStorage para reservas (polling cada 2s)')
+  let ultimoEstado = null
+  const verificarCambios = async () => {
+    try {
+      const reservas = JSON.parse(localStorage.getItem(STORAGE_KEYS.RESERVAS) || '[]')
       const estadoActual = JSON.stringify(reservas)
       if (estadoActual !== ultimoEstado) {
         ultimoEstado = estadoActual
+        console.log('🔄 Reservas actualizadas (localStorage):', reservas.length)
         callback(reservas)
       }
+    } catch (error) {
+      console.error('Error al verificar cambios en localStorage:', error)
     }
-    verificarCambios()
-    const interval = setInterval(verificarCambios, 2000)
-    return () => clearInterval(interval)
   }
+  verificarCambios()
+  const interval = setInterval(verificarCambios, 2000)
+  return () => clearInterval(interval)
 }
 
 // ============================================

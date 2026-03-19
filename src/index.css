@@ -1973,3 +1973,28 @@ img {
     margin-top: 12px;
   }
 }
+
+/* ============================================
+   PANTALLA DE CARGA DE LA APP
+   ============================================ */
+
+.app-loading {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--blanco-natural);
+  gap: 20px;
+}
+
+.loading-spinner {
+  font-size: 4rem;
+  animation: float 2s ease-in-out infinite;
+}
+
+.app-loading p {
+  color: var(--gris-texto);
+  font-size: 1.1rem;
+  animation: pulse 2s ease-in-out infinite;
+}
