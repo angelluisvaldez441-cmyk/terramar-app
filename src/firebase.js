@@ -1,19 +1,19 @@
 // ============================================
 // CONFIGURACIÓN DE FIREBASE
 // ============================================
-// Proyecto: terramar-app-2865f
+// Proyecto: terramar-app
 // ============================================
 
 import { initializeApp } from 'firebase/app'
 import { getFirestore, enableMultiTabIndexedDbPersistence } from 'firebase/firestore'
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDTCCHL_UrdyKa31PlRsOJPJZTdbHwr49g",
-  authDomain: "terramar-app-2865f.firebaseapp.com",
-  projectId: "terramar-app-2865f",
-  storageBucket: "terramar-app-2865f.firebasestorage.app",
-  messagingSenderId: "603093572620",
-  appId: "1:603093572620:web:d4ed5781cc9b846a8ea229"
+  apiKey: "AIzaSyDohqotMsD6ddNl5acJQX_V-tkYOKwQopE",
+  authDomain: "terramar-app.firebaseapp.com",
+  projectId: "terramar-app",
+  storageBucket: "terramar-app.firebasestorage.app",
+  messagingSenderId: "755582276233",
+  appId: "1:755582276233:web:b0e0aebb1dd154e4382c58"
 }
 
 // Inicializar Firebase
