@@ -6,6 +6,7 @@ import { PayPalButton } from './PayPalButton'
 import { PayPalScriptProvider } from '@paypal/react-paypal-js'
 import { dbService } from './db'
 import { AdminPanel } from './AdminPage.jsx'
+import { BackgroundEffects } from './BackgroundEffects.jsx'
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -997,6 +998,9 @@ function App() {
 
   return (
     <div className="app">
+      {/* Efectos de fondo: gotas de agua, modo oscuro, estrellas */}
+      <BackgroundEffects />
+
       <Navbar onAdminClick={handleAdminClick} />
       <main>
         <Hero />
