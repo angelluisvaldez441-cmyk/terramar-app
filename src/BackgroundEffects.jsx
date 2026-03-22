@@ -453,10 +453,10 @@ export function BackgroundEffects() {
            ============================================ */
         .mode-toggle-btn {
           position: fixed;
-          bottom: 30px;
-          right: 30px;
-          width: 65px;
-          height: 65px;
+          top: 20px;
+          right: 20px;
+          width: 55px;
+          height: 55px;
           border-radius: 50%;
           background: linear-gradient(
             135deg,
@@ -464,22 +464,22 @@ export function BackgroundEffects() {
             ${darkMode ? '#0f0f2e' : '#e6f3ff'} 100%
           );
           border: 3px solid ${darkMode ? '#4a9eff' : '#ffd700'};
-          box-shadow: 
+          box-shadow:
             0 4px 25px rgba(0, 0, 0, 0.4),
             ${darkMode ? '0 0 40px rgba(74, 158, 255, 0.6)' : '0 0 40px rgba(255, 215, 0, 0.6)'};
           cursor: pointer;
-          z-index: 10001;
+          z-index: 10002;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 2rem;
+          font-size: 1.6rem;
           transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
           pointer-events: auto;
         }
 
         .mode-toggle-btn:hover {
-          transform: scale(1.2) rotate(20deg);
-          box-shadow: 
+          transform: scale(1.15) rotate(20deg);
+          box-shadow:
             0 8px 40px rgba(0, 0, 0, 0.5),
             ${darkMode ? '0 0 60px rgba(74, 158, 255, 0.9)' : '0 0 60px rgba(255, 215, 0, 0.9)'};
         }
