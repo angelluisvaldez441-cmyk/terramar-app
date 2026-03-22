@@ -398,6 +398,7 @@ function VisionMisionValoresSection() {
 function ReservasSection({ onReservaCompletada, itemPreseleccionado }) {
   const [paso, setPaso] = useState(1)
   const [metodoPago, setMetodoPago] = useState('tarjeta')
+  const [errores, setErrores] = useState({})
   const [formData, setFormData] = useState({
     nombre: '', telefono: '', servicio: '', fecha: '', duracion: 1,
     entregaDomicilio: false, direccion: '', tipoEntrega: 'estandar', mensaje: ''
@@ -439,6 +440,55 @@ function ReservasSection({ onReservaCompletada, itemPreseleccionado }) {
   }
 
   const generarNumeroReserva = () => 'TTM-' + Math.random().toString(36).substring(2, 8).toUpperCase()
+
+  const validarFormulario = () => {
+    const nuevosErrores = {}
+
+    if (!formData.nombre.trim()) {
+      nuevosErrores.nombre = 'El nombre es requerido'
+    } else if (formData.nombre.trim().length < 3) {
+      nuevosErrores.nombre = 'El nombre debe tener al menos 3 caracteres'
+    }
+
+    if (!formData.telefono.trim()) {
+      nuevosErrores.telefono = 'El teléfono es requerido'
+    } else if (!/^[0-9\-\s\(\)]+$/.test(formData.telefono)) {
+      nuevosErrores.telefono = 'El teléfono solo puede contener números'
+    } else if (formData.telefono.replace(/\D/g, '').length < 10) {
+      nuevosErrores.telefono = 'El teléfono debe tener al menos 10 dígitos'
+    }
+
+    if (!formData.servicio) {
+      nuevosErrores.servicio = 'Debes seleccionar un transporte'
+    }
+
+    if (!formData.fecha) {
+      nuevosErrores.fecha = 'La fecha es requerida'
+    }
+
+    if (!formData.duracion || formData.duracion < 1) {
+      nuevosErrores.duracion = 'La duración mínima es 1 día'
+    }
+
+    if (formData.entregaDomicilio && !formData.direccion.trim()) {
+      nuevosErrores.direccion = 'La dirección es requerida para entrega a domicilio'
+    }
+
+    setErrores(nuevosErrores)
+
+    if (Object.keys(nuevosErrores).length > 0) {
+      // Scroll al primer error
+      const primerError = Object.keys(nuevosErrores)[0]
+      const elemento = document.getElementsByName(primerError)[0]
+      if (elemento) {
+        elemento.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        elemento.focus()
+      }
+      return false
+    }
+
+    return true
+  }
 
   const confirmarReserva = async (paymentInfo = null) => {
     setProcesando(true)
@@ -825,12 +875,20 @@ ${formData.mensaje ? `*Mensaje:* ${formData.mensaje}` : ''}`
           <div className="booking-header"><h2>Reserva tu Transporte</h2><p>Completa el formulario y prepárate para la aventura</p></div>
           <div className="booking-body">
             <div className="form-row">
-              <div className="form-group"><label className="form-label">Nombre Completo *</label><input type="text" name="nombre" className="form-input" placeholder="Ej: Juan Pérez" value={formData.nombre} onChange={handleInputChange} /></div>
-              <div className="form-group"><label className="form-label">Teléfono / WhatsApp *</label><input type="tel" name="telefono" className="form-input" placeholder="Ej: 829-123-4567" value={formData.telefono} onChange={handleInputChange} /></div>
+              <div className="form-group">
+                <label className="form-label">Nombre Completo *</label>
+                <input type="text" name="nombre" className="form-input" placeholder="Ej: Juan Pérez" value={formData.nombre} onChange={handleInputChange} style={{ borderColor: errores.nombre ? '#ff4444' : '', borderWidth: errores.nombre ? '2px' : '' }} />
+                {errores.nombre && <p style={{ color: '#ff4444', fontSize: '0.85rem', margin: '4px 0 0 0' }}>⚠️ {errores.nombre}</p>}
+              </div>
+              <div className="form-group">
+                <label className="form-label">Teléfono / WhatsApp *</label>
+                <input type="tel" name="telefono" className="form-input" placeholder="Ej: 829-123-4567" value={formData.telefono} onChange={handleInputChange} style={{ borderColor: errores.telefono ? '#ff4444' : '', borderWidth: errores.telefono ? '2px' : '' }} />
+                {errores.telefono && <p style={{ color: '#ff4444', fontSize: '0.85rem', margin: '4px 0 0 0' }}>⚠️ {errores.telefono}</p>}
+              </div>
             </div>
             <div className="form-group">
               <label className="form-label">Tipo de Transporte *</label>
-              <select name="servicio" className="form-select" value={formData.servicio} onChange={handleInputChange}>
+              <select name="servicio" className="form-select" value={formData.servicio} onChange={handleInputChange} style={{ borderColor: errores.servicio ? '#ff4444' : '', borderWidth: errores.servicio ? '2px' : '' }}>
                 <option value="">Selecciona un transporte</option>
                 <optgroup label="🚗 Vehículos">
                   {VEHICULOS.map(v => <option key={v.id} value={v.id}>{v.nombre} - {v.precioTexto}</option>)}
@@ -839,10 +897,19 @@ ${formData.mensaje ? `*Mensaje:* ${formData.mensaje}` : ''}`
                   {ANIMALES.map(a => <option key={a.id} value={a.id}>{a.nombre} - {a.precioTexto}</option>)}
                 </optgroup>
               </select>
+              {errores.servicio && <p style={{ color: '#ff4444', fontSize: '0.85rem', margin: '4px 0 0 0' }}>⚠️ {errores.servicio}</p>}
             </div>
             <div className="form-row">
-              <div className="form-group"><label className="form-label">Fecha de Inicio *</label><input type="date" name="fecha" className="form-input" value={formData.fecha} onChange={handleInputChange} min={new Date().toISOString().split('T')[0]} /></div>
-              <div className="form-group"><label className="form-label">Duración (días) *</label><input type="number" name="duracion" className="form-input" min="1" max="30" value={formData.duracion} onChange={handleInputChange} /></div>
+              <div className="form-group">
+                <label className="form-label">Fecha de Inicio *</label>
+                <input type="date" name="fecha" className="form-input" value={formData.fecha} onChange={handleInputChange} min={new Date().toISOString().split('T')[0]} style={{ borderColor: errores.fecha ? '#ff4444' : '', borderWidth: errores.fecha ? '2px' : '' }} />
+                {errores.fecha && <p style={{ color: '#ff4444', fontSize: '0.85rem', margin: '4px 0 0 0' }}>⚠️ {errores.fecha}</p>}
+              </div>
+              <div className="form-group">
+                <label className="form-label">Duración (días) *</label>
+                <input type="number" name="duracion" className="form-input" min="1" max="30" value={formData.duracion} onChange={handleInputChange} style={{ borderColor: errores.duracion ? '#ff4444' : '', borderWidth: errores.duracion ? '2px' : '' }} />
+                {errores.duracion && <p style={{ color: '#ff4444', fontSize: '0.85rem', margin: '4px 0 0 0' }}>⚠️ {errores.duracion}</p>}
+              </div>
             </div>
             <div className="form-group">
               <div className="form-checkbox-group">
@@ -861,8 +928,9 @@ ${formData.mensaje ? `*Mensaje:* ${formData.mensaje}` : ''}`
                   </p>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Dirección de Entrega</label>
-                  <input type="text" name="direccion" className="form-input" placeholder="Ej: Calle Principal #123, Barahona" value={formData.direccion} onChange={handleInputChange} />
+                  <label className="form-label">Dirección de Entrega *</label>
+                  <input type="text" name="direccion" className="form-input" placeholder="Ej: Calle Principal #123, Barahona" value={formData.direccion} onChange={handleInputChange} style={{ borderColor: errores.direccion ? '#ff4444' : '', borderWidth: errores.direccion ? '2px' : '' }} />
+                  {errores.direccion && <p style={{ color: '#ff4444', fontSize: '0.85rem', margin: '4px 0 0 0' }}>⚠️ {errores.direccion}</p>}
                 </div>
                 <div className="form-group">
                   <label className="form-label">Tipo de Entrega</label>
@@ -885,7 +953,11 @@ ${formData.mensaje ? `*Mensaje:* ${formData.mensaje}` : ''}`
               </div>
             )}
             <div className="booking-actions">
-              <button className="btn btn-primary" onClick={() => setPaso(2)} disabled={!formData.nombre || !formData.telefono || !formData.servicio || !formData.fecha}>Continuar al Pago →</button>
+              <button className="btn btn-primary" onClick={() => {
+                if (validarFormulario()) {
+                  setPaso(2)
+                }
+              }} disabled={!formData.nombre || !formData.telefono || !formData.servicio || !formData.fecha}>Continuar al Pago →</button>
               <button className="btn btn-whatsapp" onClick={abrirWhatsApp}>📱 Reservar por WhatsApp</button>
             </div>
           </div>
