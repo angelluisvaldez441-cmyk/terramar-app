@@ -789,9 +789,9 @@ ${formData.mensaje ? `*Mensaje:* ${formData.mensaje}` : ''}`
               {metodoPago === 'transferencia' && (
                 <div className="payment-content active">
                   <div className="bank-info">
-                    <div className="bank-info-row"><span className="bank-info-label">Banco:</span><span className="bank-info-value">Banco Popular Dominicano</span></div>
-                    <div className="bank-info-row"><span className="bank-info-label">Tipo:</span><span className="bank-info-value">Corriente</span></div>
-                    <div className="bank-info-row"><span className="bank-info-label">Número:</span><span className="bank-info-value">****-****-1234</span></div>
+                    <div className="bank-info-row"><span className="bank-info-label">Banco:</span><span className="bank-info-value">Banreservas</span></div>
+                    <div className="bank-info-row"><span className="bank-info-label">Tipo:</span><span className="bank-info-value">Cuenta de Ahorro</span></div>
+                    <div className="bank-info-row"><span className="bank-info-label">Número:</span><span className="bank-info-value">4252448081</span></div>
                     <div className="bank-info-row"><span className="bank-info-label">Titular:</span><span className="bank-info-value">Transporte TerraMar SRL</span></div>
                   </div>
                   <p style={{ marginBottom: '24px', lineHeight: '1.6' }}>💡 <strong>Instrucciones:</strong> Realiza una transferencia por RD${deposito.toLocaleString()} y envía el comprobante por WhatsApp.</p>
@@ -905,7 +905,6 @@ function ContactoSection() {
           <div className="contacto-card animate-on-scroll"><span className="contacto-icon">📱</span><h3 className="contacto-title">WhatsApp</h3><p className="contacto-info"><a href="https://wa.me/18297234139" target="_blank" rel="noopener noreferrer">829-723-4139</a></p></div>
           <div className="contacto-card animate-on-scroll"><span className="contacto-icon">📧</span><h3 className="contacto-title">Email</h3><p className="contacto-info"><a href="mailto:info@terramar.do">info@terramar.do</a></p></div>
           <div className="contacto-card animate-on-scroll"><span className="contacto-icon">📍</span><h3 className="contacto-title">Ubicación</h3><p className="contacto-info"><a href="https://maps.app.goo.gl/MDwvxePn5M8xg5Me7" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--verde-primario)', fontWeight: '600' }}>🗺️ Ver en Google Maps</a><br /><span style={{ fontSize: '0.9rem', opacity: 0.8 }}>Barahona 81000, República Dominicana</span></p></div>
-          <div className="contacto-card animate-on-scroll"><span className="contacto-icon">🌐</span><h3 className="contacto-title">Redes Sociales</h3><p className="contacto-info"><a href="#" style={{ marginRight: '12px' }}>Instagram</a><a href="#">Facebook</a></p></div>
         </div>
         <div style={{ textAlign: 'center', marginTop: '40px' }}>
           <a href="https://wa.me/18297234139" target="_blank" rel="noopener noreferrer" className="btn btn-whatsapp" style={{ padding: '16px 40px', fontSize: '1.1rem' }}>💬 Escríbenos por WhatsApp</a>

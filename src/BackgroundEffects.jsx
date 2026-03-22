@@ -453,17 +453,17 @@ export function BackgroundEffects() {
            ============================================ */
         .mode-toggle-btn {
           position: fixed;
-          top: 20px;
+          top: 80px;
           right: 20px;
-          width: 55px;
-          height: 55px;
+          width: 50px;
+          height: 50px;
           border-radius: 50%;
           background: linear-gradient(
             135deg,
             ${darkMode ? '#1a1a3e' : '#f0f8ff'} 0%,
             ${darkMode ? '#0f0f2e' : '#e6f3ff'} 100%
           );
-          border: 3px solid ${darkMode ? '#4a9eff' : '#ffd700'};
+          border: 2px solid ${darkMode ? '#4a9eff' : '#ffd700'};
           box-shadow:
             0 4px 25px rgba(0, 0, 0, 0.4),
             ${darkMode ? '0 0 40px rgba(74, 158, 255, 0.6)' : '0 0 40px rgba(255, 215, 0, 0.6)'};
@@ -472,7 +472,7 @@ export function BackgroundEffects() {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 1.6rem;
+          font-size: 1.4rem;
           transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
           pointer-events: auto;
         }
@@ -486,6 +486,19 @@ export function BackgroundEffects() {
 
         .mode-toggle-btn:active {
           transform: scale(0.9);
+        }
+
+        /* Responsive para móviles */
+        @media (max-width: 768px) {
+          .mode-toggle-btn {
+            top: auto;
+            bottom: 100px;
+            right: 20px;
+            width: 45px;
+            height: 45px;
+            font-size: 1.2rem;
+            border-width: 2px;
+          }
         }
 
         /* ============================================
