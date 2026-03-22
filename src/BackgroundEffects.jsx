@@ -2,33 +2,13 @@ import { useState, useEffect } from 'react'
 
 // ============================================
 // COMPONENTE DE EFECTOS DE FONDO
-// Gotas de agua, modo oscuro, estrellas y paisaje turístico
+// Modo oscuro, estrellas y paisaje turístico
 // ============================================
 
 export function BackgroundEffects() {
   const [darkMode, setDarkMode] = useState(false)
   const [stars, setStars] = useState([])
   const [shootingStars, setShootingStars] = useState([])
-  const [raindrops, setRaindrops] = useState([])
-
-  // Generar gotas de lluvia
-  useEffect(() => {
-    const generateRaindrops = () => {
-      const drops = []
-      for (let i = 0; i < 80; i++) {
-        drops.push({
-          id: i,
-          left: Math.random() * 100,
-          delay: Math.random() * 3,
-          duration: 1 + Math.random() * 1,
-          opacity: 0.2 + Math.random() * 0.3,
-          length: 15 + Math.random() * 25
-        })
-      }
-      setRaindrops(drops)
-    }
-    generateRaindrops()
-  }, [])
 
   // Generar estrellas para modo oscuro
   useEffect(() => {
@@ -283,42 +263,6 @@ export function BackgroundEffects() {
         .palm-leaf:nth-child(3) { transform: rotate(0deg) skewY(-10deg); }
         .palm-leaf:nth-child(4) { transform: rotate(30deg) skewY(-10deg); }
         .palm-leaf:nth-child(5) { transform: rotate(60deg) skewY(-10deg); }
-
-        /* ============================================
-           GOTAS DE AGUA (Modo Claro)
-           ============================================ */
-        .raindrop {
-          position: absolute;
-          top: -30px;
-          width: 2px;
-          background: linear-gradient(
-            to bottom,
-            transparent,
-            rgba(100, 180, 220, 0.7),
-            rgba(70, 150, 200, 0.9)
-          );
-          border-radius: 50%;
-          animation: fall linear infinite;
-          pointer-events: none;
-          box-shadow: 0 0 5px rgba(100, 180, 220, 0.5);
-        }
-
-        @keyframes fall {
-          0% {
-            transform: translateY(-30px);
-            opacity: 0;
-          }
-          10% {
-            opacity: 1;
-          }
-          90% {
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(100vh);
-            opacity: 0;
-          }
-        }
 
         /* ============================================
            MODO OSCURO - CIELO NOCTURNO
@@ -1170,23 +1114,6 @@ export function BackgroundEffects() {
               <div className="palm-leaf"></div>
               <div className="palm-leaf"></div>
             </div>
-          </div>
-          
-          {/* Gotas de agua */}
-          <div className="background-effects-container">
-            {raindrops.map((drop) => (
-              <div
-                key={drop.id}
-                className="raindrop"
-                style={{
-                  left: `${drop.left}%`,
-                  animationDelay: `${drop.delay}s`,
-                  animationDuration: `${drop.duration}s`,
-                  opacity: drop.opacity,
-                  height: `${drop.length}px`
-                }}
-              />
-            ))}
           </div>
         </>
       )}
