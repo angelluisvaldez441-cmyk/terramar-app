@@ -41,9 +41,9 @@ export function BackgroundEffects() {
         duration: 1.5 + Math.random() * 1.5,
         length: 100 + Math.random() * 150
       }
-      
+
       setShootingStars(prev => [...prev, newShootingStar])
-      
+
       setTimeout(() => {
         setShootingStars(prev => prev.filter(s => s.id !== id))
       }, (newShootingStar.duration + newShootingStar.delay) * 1000)
@@ -133,136 +133,6 @@ export function BackgroundEffects() {
             opacity: 0.9;
           }
         }
-
-        /* Nubes decorativas */
-        .tourist-cloud {
-          position: fixed;
-          background: rgba(255, 255, 255, 0.8);
-          border-radius: 50px;
-          z-index: -1;
-          animation: cloudFloat linear infinite;
-          pointer-events: none;
-        }
-
-        .tourist-cloud::before,
-        .tourist-cloud::after {
-          content: '';
-          position: absolute;
-          background: rgba(255, 255, 255, 0.8);
-          border-radius: 50%;
-        }
-
-        @keyframes cloudFloat {
-          from {
-            transform: translateX(-200px);
-          }
-          to {
-            transform: translateX(calc(100vw + 200px));
-          }
-        }
-
-        /* Silueta de montañas */
-        .tourist-mountains {
-          position: fixed;
-          bottom: 0;
-          left: 0;
-          width: 100%;
-          height: 250px;
-          z-index: -1;
-          pointer-events: none;
-        }
-
-        .mountain {
-          position: absolute;
-          bottom: 0;
-          width: 0;
-          height: 0;
-          border-left: 150px solid transparent;
-          border-right: 150px solid transparent;
-          border-bottom: 200px solid #4A7C4E;
-          filter: drop-shadow(0 -5px 10px rgba(0,0,0,0.2));
-        }
-
-        .mountain:nth-child(1) {
-          left: -50px;
-          border-bottom-color: #3D6B3F;
-          transform: scale(1.2);
-        }
-
-        .mountain:nth-child(2) {
-          left: 150px;
-          border-bottom-color: #4A7C4E;
-          transform: scale(1);
-        }
-
-        .mountain:nth-child(3) {
-          left: 350px;
-          border-bottom-color: #5A8C5E;
-          transform: scale(1.3);
-        }
-
-        .mountain:nth-child(4) {
-          left: 600px;
-          border-bottom-color: #3D6B3F;
-          transform: scale(1.1);
-        }
-
-        .mountain:nth-child(5) {
-          left: 850px;
-          border-bottom-color: #4A7C4E;
-          transform: scale(1.4);
-        }
-
-        .mountain:nth-child(6) {
-          left: 1150px;
-          border-bottom-color: #5A8C5E;
-          transform: scale(1);
-        }
-
-        /* Árboles/palmeras decorativas */
-        .tourist-palm {
-          position: fixed;
-          bottom: 0;
-          width: 60px;
-          height: 180px;
-          z-index: -1;
-          pointer-events: none;
-        }
-
-        .palm-trunk {
-          position: absolute;
-          bottom: 0;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 8px;
-          height: 100px;
-          background: linear-gradient(90deg, #8B4513 0%, #A0522D 50%, #8B4513 100%);
-          border-radius: 4px;
-        }
-
-        .palm-leaves {
-          position: absolute;
-          top: 0;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 120px;
-          height: 80px;
-        }
-
-        .palm-leaf {
-          position: absolute;
-          width: 60px;
-          height: 8px;
-          background: linear-gradient(90deg, #228B22 0%, #32CD32 50%, #228B22 100%);
-          border-radius: 4px;
-          transform-origin: left center;
-        }
-
-        .palm-leaf:nth-child(1) { transform: rotate(-60deg) skewY(-10deg); }
-        .palm-leaf:nth-child(2) { transform: rotate(-30deg) skewY(-10deg); }
-        .palm-leaf:nth-child(3) { transform: rotate(0deg) skewY(-10deg); }
-        .palm-leaf:nth-child(4) { transform: rotate(30deg) skewY(-10deg); }
-        .palm-leaf:nth-child(5) { transform: rotate(60deg) skewY(-10deg); }
 
         /* ============================================
            MODO OSCURO - CIELO NOCTURNO
@@ -1037,7 +907,7 @@ export function BackgroundEffects() {
               />
             ))}
           </div>
-          
+
           {/* Luna */}
           <div className="dark-moon" />
         </>
@@ -1045,76 +915,9 @@ export function BackgroundEffects() {
         /* MODO CLARO - FONDO TURÍSTICO */
         <>
           <div className="tourist-background" />
-          
+
           {/* Sol */}
           <div className="tourist-sun" />
-          
-          {/* Nubes animadas */}
-          <div 
-            className="tourist-cloud"
-            style={{
-              top: '100px',
-              left: '-200px',
-              width: '120px',
-              height: '50px',
-              animationDuration: '25s'
-            }}
-          />
-          <div 
-            className="tourist-cloud"
-            style={{
-              top: '150px',
-              left: '-200px',
-              width: '100px',
-              height: '40px',
-              animationDuration: '30s',
-              animationDelay: '5s'
-            }}
-          />
-          <div 
-            className="tourist-cloud"
-            style={{
-              top: '80px',
-              left: '-200px',
-              width: '140px',
-              height: '60px',
-              animationDuration: '35s',
-              animationDelay: '10s'
-            }}
-          />
-          
-          {/* Montañas */}
-          <div className="tourist-mountains">
-            <div className="mountain"></div>
-            <div className="mountain"></div>
-            <div className="mountain"></div>
-            <div className="mountain"></div>
-            <div className="mountain"></div>
-            <div className="mountain"></div>
-          </div>
-          
-          {/* Palmeras decorativas */}
-          <div className="tourist-palm" style={{ left: '5%' }}>
-            <div className="palm-trunk"></div>
-            <div className="palm-leaves">
-              <div className="palm-leaf"></div>
-              <div className="palm-leaf"></div>
-              <div className="palm-leaf"></div>
-              <div className="palm-leaf"></div>
-              <div className="palm-leaf"></div>
-            </div>
-          </div>
-          
-          <div className="tourist-palm" style={{ right: '8%' }}>
-            <div className="palm-trunk"></div>
-            <div className="palm-leaves">
-              <div className="palm-leaf"></div>
-              <div className="palm-leaf"></div>
-              <div className="palm-leaf"></div>
-              <div className="palm-leaf"></div>
-              <div className="palm-leaf"></div>
-            </div>
-          </div>
         </>
       )}
 
