@@ -86,7 +86,7 @@ export function BackgroundEffects() {
         }
 
         /* ============================================
-           MODO CLARO - FONDO TURÍSTICO CON PAISAJE
+           MODO CLARO - FONDO VERDE
            ============================================ */
         .tourist-background {
           position: fixed;
@@ -96,42 +96,12 @@ export function BackgroundEffects() {
           height: 100%;
           background: linear-gradient(
             180deg,
-            #87CEEB 0%,
-            #98D8E8 30%,
-            #B8E8B8 60%,
-            #90C890 80%,
+            #B8E8B8 0%,
+            #90C890 50%,
             #6B8E6B 100%
           );
           z-index: -2;
           pointer-events: none;
-        }
-
-        /* Sol decorativo */
-        .tourist-sun {
-          position: fixed;
-          top: 60px;
-          right: 80px;
-          width: 80px;
-          height: 80px;
-          background: radial-gradient(circle, #FFD700 0%, #FFA500 70%, transparent 100%);
-          border-radius: 50%;
-          box-shadow: 
-            0 0 60px 20px rgba(255, 215, 0, 0.6),
-            0 0 100px 40px rgba(255, 165, 0, 0.4);
-          z-index: -1;
-          animation: sunPulse 4s ease-in-out infinite;
-          pointer-events: none;
-        }
-
-        @keyframes sunPulse {
-          0%, 100% {
-            transform: scale(1);
-            opacity: 1;
-          }
-          50% {
-            transform: scale(1.1);
-            opacity: 0.9;
-          }
         }
 
         /* ============================================
@@ -912,12 +882,9 @@ export function BackgroundEffects() {
           <div className="dark-moon" />
         </>
       ) : (
-        /* MODO CLARO - FONDO TURÍSTICO */
+        /* MODO CLARO - FONDO VERDE */
         <>
           <div className="tourist-background" />
-
-          {/* Sol */}
-          <div className="tourist-sun" />
         </>
       )}
 
