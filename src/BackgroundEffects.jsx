@@ -6,9 +6,23 @@ import { useState, useEffect } from 'react'
 // ============================================
 
 export function BackgroundEffects() {
-  const [darkMode, setDarkMode] = useState(false)
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem('darkMode')
+    return saved === 'true'
+  })
   const [stars, setStars] = useState([])
   const [shootingStars, setShootingStars] = useState([])
+
+  // Aplicar modo oscuro cuando cambia el estado
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add('dark-mode-active')
+      localStorage.setItem('darkMode', 'true')
+    } else {
+      document.body.classList.remove('dark-mode-active')
+      localStorage.setItem('darkMode', 'false')
+    }
+  }, [darkMode])
 
   // Generar estrellas para modo oscuro
   useEffect(() => {
@@ -60,12 +74,6 @@ export function BackgroundEffects() {
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode)
-    // Aplicar clase al body para estilos globales
-    if (!darkMode) {
-      document.body.classList.add('dark-mode-active')
-    } else {
-      document.body.classList.remove('dark-mode-active')
-    }
   }
 
   return (
