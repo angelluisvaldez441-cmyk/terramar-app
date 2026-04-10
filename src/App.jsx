@@ -403,6 +403,7 @@ function ReservasSection({ onReservaCompletada, itemPreseleccionado }) {
     nombre: '', telefono: '', servicio: '', fecha: '', duracion: 1,
     entregaDomicilio: false, direccion: '', tipoEntrega: 'estandar', mensaje: ''
   })
+  const [selectedHoras, setSelectedHoras] = useState(3)
   const [datosTarjeta, setDatosTarjeta] = useState({ numero: '', nombre: '', vencimiento: '', cvv: '' })
   const [stripePaymentInfo, setStripePaymentInfo] = useState(null)
   const [paypalPaymentInfo, setPaypalPaymentInfo] = useState(null)
@@ -417,10 +418,23 @@ function ReservasSection({ onReservaCompletada, itemPreseleccionado }) {
   }, [itemPreseleccionado])
 
   const servicioSeleccionado = [...VEHICULOS, ...ANIMALES].find(s => s.id === formData.servicio)
+  const esAnimal = servicioSeleccionado && ANIMALES.some(a => a.id === servicioSeleccionado.id)
+
+  // Cálculo de precio: para animales se usa horas, para vehículos se usa días
   const precioBase = servicioSeleccionado?.precio || 0
+  const precioMax = servicioSeleccionado?.precioMax || precioBase
+
+  // Para animales: precio por hora = precioMax / 8 (jornada completa de 8 horas)
+  // Para vehículos: precio por día = precio
+  const precioPorHora = esAnimal ? Math.round(precioMax / 8) : precioBase
+  const horasSeleccionadas = esAnimal ? selectedHoras : formData.duracion
+
+  const subtotal = esAnimal
+    ? precioPorHora * horasSeleccionadas  // Animales: precio por hora × horas
+    : precioBase * formData.duracion      // Vehículos: precio por día × días
+
   const preciosEntrega = { estandar: 500, playa: 1000, montana: 1500 }
   const entregaExtra = formData.entregaDomicilio ? (preciosEntrega[formData.tipoEntrega] || 1000) : 0
-  const subtotal = precioBase * formData.duracion
   const total = subtotal + entregaExtra
   const deposito = Math.round(total * 0.5)
   const resto = total - deposito
@@ -466,8 +480,15 @@ function ReservasSection({ onReservaCompletada, itemPreseleccionado }) {
       nuevosErrores.fecha = 'La fecha es requerida'
     }
 
-    if (!formData.duracion || formData.duracion < 1) {
-      nuevosErrores.duracion = 'La duración mínima es 1 día'
+    // Validación diferente para animales (horas) vs vehículos (días)
+    if (esAnimal) {
+      if (!selectedHoras || selectedHoras < 3) {
+        nuevosErrores.duracion = 'La duración mínima es 3 horas'
+      }
+    } else {
+      if (!formData.duracion || formData.duracion < 1) {
+        nuevosErrores.duracion = 'La duración mínima es 1 día'
+      }
     }
 
     if (formData.entregaDomicilio && !formData.direccion.trim()) {
@@ -506,7 +527,7 @@ function ReservasSection({ onReservaCompletada, itemPreseleccionado }) {
         nombre: servicioSeleccionado?.nombre || ''
       },
       fecha: formData.fecha,
-      duracion: formData.duracion,
+      duracion: esAnimal ? selectedHoras : formData.duracion,
       total: total,
       deposito: deposito,
       resto: resto,
@@ -617,12 +638,21 @@ function ReservasSection({ onReservaCompletada, itemPreseleccionado }) {
 *Teléfono:* ${formData.telefono}
 *Servicio:* ${servicioSeleccionado?.nombre}
 *Fecha:* ${formData.fecha}
-*Duración:* ${formData.duracion} día(s)
+${esAnimal
+        ? `*Duración:* ${selectedHoras} horas de paseo guiado`
+        : `*Duración:* ${formData.duracion} día(s)`
+      }
 *Entrega a domicilio:* ${formData.entregaDomicilio ? 'Sí' : 'No'}
 ${formData.entregaDomicilio ? `*Tipo de entrega:* ${tiposEntrega[formData.tipoEntrega] || 'Estándar'}
 *Dirección:* ${formData.direccion}` : '*Entrega a domicilio:* No'}
 
 *💰 Resumen:*
+${esAnimal
+        ? `Precio por hora: RD$${precioPorHora.toLocaleString()}
+Horas: ${selectedHoras}`
+        : `Precio por día: RD$${precioBase.toLocaleString()}
+Días: ${formData.duracion}`
+      }
 Total: RD$${total.toLocaleString()}
 Depósito (50%): RD$${deposito.toLocaleString()}
 Resto al recoger: RD$${resto.toLocaleString()}
@@ -648,6 +678,7 @@ ${formData.mensaje ? `*Mensaje:* ${formData.mensaje}` : ''}`
           alert('✅ Reserva cancelada correctamente')
           setReservaConfirmada(null)
           setFormData({ nombre: '', telefono: '', servicio: '', fecha: '', duracion: 1, entregaDomicilio: false, direccion: '', tipoEntrega: 'estandar', mensaje: '' })
+          setSelectedHoras(3)
           setPaso(1)
         } else {
           alert('❌ No se encontró la reserva para cancelar')
@@ -729,7 +760,15 @@ ${formData.mensaje ? `*Mensaje:* ${formData.mensaje}` : ''}`
                 <h4>📋 Resumen de tu Reserva</h4>
                 <div className="confirmation-row"><span>Servicio:</span><strong>{reservaConfirmada.servicioNombre}</strong></div>
                 <div className="confirmation-row"><span>Fecha:</span><strong>{reservaConfirmada.fecha}</strong></div>
-                <div className="confirmation-row"><span>Duración:</span><strong>{reservaConfirmada.duracion} día(s)</strong></div>
+                <div className="confirmation-row">
+                  <span>Duración:</span>
+                  <strong>
+                    {reservaConfirmada.servicio && ANIMALES.some(a => a.id === reservaConfirmada.servicio.id)
+                      ? `${reservaConfirmada.duracion} horas de paseo guiado`
+                      : `${reservaConfirmada.duracion} día(s)`
+                    }
+                  </strong>
+                </div>
                 <div className="confirmation-row"><span>Total:</span><strong style={{ color: 'var(--dorado)' }}>RD${reservaConfirmada.total.toLocaleString()}</strong></div>
                 <div className="confirmation-row"><span>Depósito:</span><strong style={{ color: 'var(--verde-acento)' }}>RD${reservaConfirmada.deposito.toLocaleString()}</strong></div>
                 <div className="confirmation-row"><span>Resto:</span><strong>RD${reservaConfirmada.resto.toLocaleString()}</strong></div>
@@ -738,7 +777,7 @@ ${formData.mensaje ? `*Mensaje:* ${formData.mensaje}` : ''}`
                 <button className="btn btn-whatsapp" onClick={abrirWhatsApp}>
                   📱 Enviar comprobante por WhatsApp
                 </button>
-                <button className="btn btn-secondary" onClick={() => { setReservaConfirmada(null); setFormData({ nombre: '', telefono: '', servicio: '', fecha: '', duracion: 1, entregaDomicilio: false, direccion: '', tipoEntrega: 'estandar', mensaje: '' }); setPaso(1) }}>
+                <button className="btn btn-secondary" onClick={() => { setReservaConfirmada(null); setFormData({ nombre: '', telefono: '', servicio: '', fecha: '', duracion: 1, entregaDomicilio: false, direccion: '', tipoEntrega: 'estandar', mensaje: '' }); setSelectedHoras(3); setPaso(1) }}>
                   Hacer otra reserva
                 </button>
                 <button className="btn" style={{ background: '#ff4d4f', color: 'white', width: '100%', marginTop: '12px' }} onClick={cancelarReserva}>
@@ -906,9 +945,28 @@ ${formData.mensaje ? `*Mensaje:* ${formData.mensaje}` : ''}`
                 {errores.fecha && <p style={{ color: '#ff4444', fontSize: '0.85rem', margin: '4px 0 0 0' }}>⚠️ {errores.fecha}</p>}
               </div>
               <div className="form-group">
-                <label className="form-label">Duración (días) *</label>
-                <input type="number" name="duracion" className="form-input" min="1" max="30" value={formData.duracion} onChange={handleInputChange} style={{ borderColor: errores.duracion ? '#ff4444' : '', borderWidth: errores.duracion ? '2px' : '' }} />
-                {errores.duracion && <p style={{ color: '#ff4444', fontSize: '0.85rem', margin: '4px 0 0 0' }}>⚠️ {errores.duracion}</p>}
+                {esAnimal ? (
+                  <>
+                    <label className="form-label">Duración del Paseo (horas) *</label>
+                    <select
+                      className="form-select"
+                      value={selectedHoras}
+                      onChange={(e) => setSelectedHoras(Number(e.target.value))}
+                      style={{ borderColor: errores.duracion ? '#ff4444' : '', borderWidth: errores.duracion ? '2px' : '' }}
+                    >
+                      {[3, 4, 5, 6, 7, 8].map(hora => (
+                        <option key={hora} value={hora}>{hora} horas</option>
+                      ))}
+                    </select>
+                    {errores.duracion && <p style={{ color: '#ff4444', fontSize: '0.85rem', margin: '4px 0 0 0' }}>⚠️ {errores.duracion}</p>}
+                  </>
+                ) : (
+                  <>
+                    <label className="form-label">Duración (días) *</label>
+                    <input type="number" name="duracion" className="form-input" min="1" max="30" value={formData.duracion} onChange={handleInputChange} style={{ borderColor: errores.duracion ? '#ff4444' : '', borderWidth: errores.duracion ? '2px' : '' }} />
+                    {errores.duracion && <p style={{ color: '#ff4444', fontSize: '0.85rem', margin: '4px 0 0 0' }}>⚠️ {errores.duracion}</p>}
+                  </>
+                )}
               </div>
             </div>
             <div className="form-group">
@@ -943,13 +1001,29 @@ ${formData.mensaje ? `*Mensaje:* ${formData.mensaje}` : ''}`
               </>
             )}
             <div className="form-group"><label className="form-label">Mensaje Opcional</label><textarea name="mensaje" className="form-textarea" placeholder="Cuéntanos más sobre tu aventura..." value={formData.mensaje} onChange={handleInputChange}></textarea></div>
-            {formData.servicio && formData.duracion && (
+            {formData.servicio && (esAnimal ? selectedHoras : formData.duracion) && (
               <div className="price-summary">
-                <div className="price-row"><span className="price-label">Precio por día:</span><span className="price-value">RD${precioBase.toLocaleString()}</span></div>
-                <div className="price-row"><span className="price-label">Días:</span><span className="price-value">{formData.duracion}</span></div>
-                {formData.entregaDomicilio && <div className="price-row"><span className="price-label">Entrega:</span><span className="price-value">RD${entregaExtra.toLocaleString()}</span></div>}
-                <div className="price-row" style={{ borderBottom: 'none', marginTop: '12px', paddingTop: '12px' }}><span className="price-label" style={{ fontSize: '1.2rem' }}>Total estimado:</span><span className="price-value highlight">RD${total.toLocaleString()}</span></div>
-                <div className="price-row" style={{ borderBottom: 'none' }}><span className="price-label">Depósito (50%):</span><span className="price-value">RD${deposito.toLocaleString()}</span></div>
+                {esAnimal ? (
+                  <>
+                    <div className="price-row"><span className="price-label">Precio por hora:</span><span className="price-value">RD${precioPorHora.toLocaleString()}</span></div>
+                    <div className="price-row"><span className="price-label">Horas de paseo:</span><span className="price-value">{selectedHoras} horas</span></div>
+                    <div className="price-row" style={{ fontSize: '0.9rem', fontStyle: 'italic', color: 'var(--verde-secundario)' }}>
+                      <span className="price-label">Paseo guiado con:</span><span className="price-value" style={{ fontSize: '0.85rem' }}>{servicioSeleccionado?.nombre}</span>
+                    </div>
+                    {formData.entregaDomicilio && <div className="price-row"><span className="price-label">Entrega:</span><span className="price-value">RD${entregaExtra.toLocaleString()}</span></div>}
+                    <div className="price-row" style={{ borderBottom: 'none', marginTop: '12px', paddingTop: '12px' }}><span className="price-label" style={{ fontSize: '1.2rem' }}>Total estimado:</span><span className="price-value highlight">RD${total.toLocaleString()}</span></div>
+                    <div className="price-row" style={{ borderBottom: 'none', fontSize: '0.95rem' }}><span className="price-label" style={{ fontSize: '1rem' }}>Precio final:</span><span className="price-value highlight" style={{ fontSize: '1.1rem', color: '#fff' }}>RD${total.toLocaleString()} por {selectedHoras} horas de paseo guiado</span></div>
+                    <div className="price-row" style={{ borderBottom: 'none' }}><span className="price-label">Depósito (50%):</span><span className="price-value">RD${deposito.toLocaleString()}</span></div>
+                  </>
+                ) : (
+                  <>
+                    <div className="price-row"><span className="price-label">Precio por día:</span><span className="price-value">RD${precioBase.toLocaleString()}</span></div>
+                    <div className="price-row"><span className="price-label">Días:</span><span className="price-value">{formData.duracion}</span></div>
+                    {formData.entregaDomicilio && <div className="price-row"><span className="price-label">Entrega:</span><span className="price-value">RD${entregaExtra.toLocaleString()}</span></div>}
+                    <div className="price-row" style={{ borderBottom: 'none', marginTop: '12px', paddingTop: '12px' }}><span className="price-label" style={{ fontSize: '1.2rem' }}>Total estimado:</span><span className="price-value highlight">RD${total.toLocaleString()}</span></div>
+                    <div className="price-row" style={{ borderBottom: 'none' }}><span className="price-label">Depósito (50%):</span><span className="price-value">RD${deposito.toLocaleString()}</span></div>
+                  </>
+                )}
               </div>
             )}
             <div className="booking-actions">
