@@ -252,6 +252,7 @@ function Card({ item, tipo, foto, onReservar }) {
         <p className="card-description">{item.descripcion}</p>
         {item.uso && <p style={{ fontSize: '0.9rem', color: '#8B8B8B', marginBottom: '12px' }}>💡 {item.uso}</p>}
         <p className="card-price">{item.precioTexto}</p>
+        <p style={{ fontSize: '0.8rem', color: '#27ae60', marginBottom: '12px', fontWeight: '500' }}>🛡️ Seguro básico incluido en el precio</p>
         <div className="card-actions">
           <button className="btn btn-primary" onClick={() => onReservar(item)}>Reservar</button>
         </div>
@@ -528,7 +529,7 @@ function ReservasSection({ onReservaCompletada, itemPreseleccionado }) {
         nombre: servicioSeleccionado?.nombre || ''
       },
       fecha: formData.fecha,
-      duracion: esAnimal ? selectedHoras : formData.duracion,
+      duracion: esPorHora ? selectedHoras : formData.duracion,
       total: total,
       deposito: deposito,
       resto: resto,
@@ -1030,6 +1031,10 @@ ${formData.mensaje ? `*Mensaje:* ${formData.mensaje}` : ''}`
                 )}
               </div>
             )}
+            <div style={{ padding: '16px', background: 'rgba(39, 174, 96, 0.1)', borderRadius: '8px', marginBottom: '20px', border: '1px solid rgba(39, 174, 96, 0.3)' }}>
+              <p style={{ margin: 0, fontSize: '0.9rem', color: '#27ae60', fontWeight: '500' }}>📌 Todos nuestros servicios incluyen seguro básico contra terceros.</p>
+              <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#8B8B8B' }}>Para más detalles sobre la cobertura, consulte con nuestro personal.</p>
+            </div>
             <div className="booking-actions">
               <button className="btn btn-primary" onClick={() => {
                 if (validarFormulario()) {
