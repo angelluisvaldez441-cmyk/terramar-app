@@ -629,6 +629,71 @@ export function BackgroundEffects() {
           border-color: #2a2a4e !important;
         }
 
+        /* Bank Info - Transferencia */
+        body.dark-mode-active .bank-info {
+          background: rgba(26, 26, 62, 0.8) !important;
+          border: 1px solid rgba(74, 158, 255, 0.3) !important;
+        }
+
+        body.dark-mode-active .bank-info-row {
+          border-bottom-color: rgba(74, 158, 255, 0.2) !important;
+        }
+
+        body.dark-mode-active .bank-info-label {
+          color: #a0a0a0 !important;
+        }
+
+        body.dark-mode-active .bank-info-value {
+          color: #4a9eff !important;
+        }
+
+        /* Credit Card Visual */
+        body.dark-mode-active .credit-card-visual {
+          background: linear-gradient(135deg, #2a2a4e 0%, #1a1a3e 100%) !important;
+          border: 1px solid rgba(74, 158, 255, 0.3) !important;
+        }
+
+        body.dark-mode-active .credit-card-number-display {
+          color: #ffffff !important;
+        }
+
+        body.dark-mode-active .credit-card-label {
+          color: #a0a0a0 !important;
+        }
+
+        body.dark-mode-active .credit-card-value {
+          color: #4a9eff !important;
+        }
+
+        /* Payment instructions text */
+        body.dark-mode-active .payment-content p {
+          color: #c0c0c0 !important;
+        }
+
+        body.dark-mode-active .payment-content strong {
+          color: #e0e0e0 !important;
+        }
+
+        /* Booking info box */
+        body.dark-mode-active .booking-body > div[style*="rgba(39, 174, 96"] {
+          background: rgba(26, 26, 62, 0.6) !important;
+          border-color: rgba(74, 158, 255, 0.3) !important;
+        }
+
+        body.dark-mode-active .booking-body > div[style*="rgba(39, 174, 96"] p:first-child {
+          color: #4a9eff !important;
+        }
+
+        body.dark-mode-active .booking-body > div[style*="rgba(39, 174, 96"] p:last-child {
+          color: #a0a0a0 !important;
+        }
+
+        /* PayPal success message */
+        body.dark-mode-active div[style*="background: #d4edda"] {
+          background: rgba(26, 92, 56, 0.5) !important;
+          color: #4a9eff !important;
+        }
+
         /* Footer */
         body.dark-mode-active footer {
           background: rgba(15, 15, 46, 0.8) !important;

@@ -567,6 +567,7 @@ function AdminPanelContent({ onClose, fotos, setFotos }) {
                           const nombre = reserva.nombre || 'N/A'
                           const telefono = reserva.telefono || 'N/A'
                           const servicio = reserva.servicio?.nombre || reserva.servicioNombre || 'N/A'
+                          const servicioId = reserva.servicio?.id || reserva.servicioId || ''
                           const fecha = reserva.fecha || 'N/A'
                           const duracion = reserva.duracion || 1
                           const estado = reserva.estado || 'pendiente'
@@ -574,6 +575,10 @@ function AdminPanelContent({ onClose, fotos, setFotos }) {
                           const estaPausado = reserva.estaPausado || false
                           const tiempoPausado = reserva.tiempoPausado
                           const id = reserva.id || `local-${index}`
+
+                          // Determinar si es por hora (animales o quad) o por día (vehículos)
+                          const esAnimal = ['caballo', 'burro', 'mula'].some(id => servicioId.includes(id))
+                          const esPorHora = esAnimal || servicioId === 'quad'
 
                           // Calcular tiempo transcurrido
                           const tiempo = calcularTiempoTranscurrido(fechaEntrega, estaPausado, tiempoPausado)
@@ -599,7 +604,7 @@ function AdminPanelContent({ onClose, fotos, setFotos }) {
                               </td>
                               <td style={{ padding: '12px 8px' }}>{servicio}</td>
                               <td style={{ padding: '12px 8px' }}>{fecha}</td>
-                              <td style={{ padding: '12px 8px' }}>{duracion} día(s)</td>
+                              <td style={{ padding: '12px 8px' }}>{duracion} {esPorHora ? 'hora(s)' : 'día(s)'}</td>
                               <td style={{ padding: '12px 8px' }}>
                                 <span style={{
                                   padding: '4px 12px',
@@ -793,7 +798,14 @@ function AdminPanelContent({ onClose, fotos, setFotos }) {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Duración (días)</label>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+                    Duración ({(() => {
+                      const servicioId = reservaEditar.servicio?.id || reservaEditar.servicioId || ''
+                      const esAnimal = ['caballo', 'burro', 'mula'].some(id => servicioId.includes(id))
+                      const esPorHora = esAnimal || servicioId === 'quad'
+                      return esPorHora ? 'horas' : 'días'
+                    })()})
+                  </label>
                   <input
                     type="number"
                     value={reservaEditar.duracion || 1}
